@@ -1,0 +1,14 @@
+# Standard Maven
+target/
+*.log
+.settings/
+.classpath
+.project
+.vscode/
+.idea/
+*.iml
+.DS_Store
+
+# Derby Database (Local data should not be committed)
+iwish_db/
+derby.log
