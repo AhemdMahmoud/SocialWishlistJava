@@ -1,18 +1,19 @@
 package com.iwish.client;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class ClientMain extends Application {
 
     @Override
-    public void start(Stage primaryStage) {
-        System.out.println("Client UI starting...");
-
-        // TODO: Initialize your Login Controller or Dashboard here.
-        // NetworkManager.getInstance().connect();
-
-        primaryStage.setTitle("i-Wish Client");
+    public void start(Stage primaryStage) throws Exception {
+        // Load Marketplace View
+        Parent root = FXMLLoader.load(getClass().getResource("/com/iwish/client/marketplace.fxml"));
+        primaryStage.setTitle("i-Wish Marketplace");
+        primaryStage.setScene(new Scene(root));
         primaryStage.show();
     }
 

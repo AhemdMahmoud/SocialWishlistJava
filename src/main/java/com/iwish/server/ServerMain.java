@@ -1,38 +1,23 @@
 package com.iwish.server;
 
-import com.iwish.database.DatabaseManager;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class ServerMain {
-    private static final int PORT = 5000;
+public class ServerMain extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        Parent root = FXMLLoader.load(getClass().getResource("/com/iwish/server/server_view.fxml"));
+        primaryStage.setTitle("i-Wish Server Admin");
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setOnCloseRequest(e -> System.exit(0)); // Ensure full shutdown
+        primaryStage.show();
+    }
 
     public static void main(String[] args) {
-        System.out.println("Starting iWish Server...");
-
-        try {
-            // Initialize Database
-            DatabaseManager dbManager = new DatabaseManager();
-            if (dbManager.connect()) {
-                System.out.println("Database connected successfully.");
-            } else {
-                System.err.println("Database connection failed. Exiting.");
-                return;
-            }
-
-            // Start Server Socket
-            try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-                System.out.println("Server listening on port " + PORT);
-
-                while (true) {
-                    Socket socket = serverSocket.accept();
-                    System.out.println("New client connected: " + socket.getInetAddress());
-                    new Thread(new ClientHandler(socket, dbManager)).start();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        launch(args);
     }
 }

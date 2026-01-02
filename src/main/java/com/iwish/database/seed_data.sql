@@ -1,17 +1,8 @@
+```sql
 -- Insert 50 items into WISHLIST table
 -- Copy and paste this entire script into your Java DB SQL command window
 
 -- Electronics (15 items)
-INSERT INTO WISHLIST (ITEM_NAME, ITEM_PRICE, DESCRIPTION) VALUES 
-('PlayStation 5', 30000.00, 'Latest generation gaming console with ultra-high speed SSD and 4K gaming'),
-('Xbox Series X', 28000.00, 'Powerful gaming console with 4K capabilities and Game Pass access'),
-('Nintendo Switch OLED', 18000.00, 'Portable gaming console with vibrant 7-inch OLED screen'),
-('iPhone 15 Pro Max', 65000.00, 'Premium smartphone with titanium design and advanced camera system'),
-('Samsung Galaxy S24 Ultra', 60000.00, 'Flagship Android phone with S Pen and 200MP camera'),
-('MacBook Air M3', 75000.00, 'Thin and powerful laptop with Apple M3 chip and all-day battery'),
-('iPad Pro 12.9"', 55000.00, 'Professional tablet with M2 chip and stunning Liquid Retina display'),
-('Sony WH-1000XM5', 15000.00, 'Industry-leading wireless noise canceling headphones'),
-('AirPods Pro 2nd Gen', 12000.00, 'Premium wireless earbuds with active noise cancellation'),
 ('Apple Watch Series 9', 20000.00, 'Advanced smartwatch with health monitoring and fitness tracking'),
 ('GoPro Hero 12 Black', 22000.00, 'Waterproof 5.3K action camera for adventure recording'),
 ('DJI Mini 4 Pro Drone', 45000.00, 'Compact drone with 4K camera and 34-minute flight time'),

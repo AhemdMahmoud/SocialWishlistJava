@@ -1,10 +1,14 @@
 package com.iwish.server;
 
 import com.iwish.database.DatabaseManager;
+import com.iwish.database.ItemDAO;
+import com.iwish.models.Item;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream; // For sending list objects if needed, but simple protocol preferred
 import java.net.Socket;
+import java.util.List;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -24,17 +28,21 @@ public class ClientHandler implements Runnable {
             dos = new DataOutputStream(socket.getOutputStream());
 
             while (true) {
-                // Keep the connection open - loop waiting for commands
                 try {
                     String request = dis.readUTF();
                     System.out.println("Received: " + request);
 
-                    // TODO: Implement command handling (Login, Register, etc.)
-                    // Example:
-                    // String[] parts = request.split(":");
-                    // String command = parts[0];
-                    // switch(command) { ... }
+                    String[] parts = request.split("##"); // Using ## as delimiter
+                    String command = parts[0];
 
+                    switch (command) {
+                        case "GET_ITEMS":
+                            handleGetItems();
+                            break;
+                        default:
+                            dos.writeUTF("ERROR##Unknown Command");
+                            break;
+                    }
                 } catch (IOException e) {
                     System.out.println("Client disconnected.");
                     break;
@@ -50,5 +58,27 @@ public class ClientHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    private void handleGetItems() throws IOException {
+        ItemDAO itemDAO = new ItemDAO(dbManager);
+        List<Item> items = itemDAO.getAllItems();
+        
+        // Simple serialization: JSON-like or just delimited
+        // Protocol: SUCCESS##Count##ID:Name:Price:ImgSrc##ID:Name:Price:ImgSrc...
+        StringBuilder response = new StringBuilder("SUCCESS##" + items.size());
+                for (Item item : items) {
+                // Protocol: ID:Name:Price:ImgSrc##...
+                // Ensure no colons in content or handle escaping if needed.
+                response.append("##")
+                  .append(item.getId()).append(":")
+                  .append(item.getName()).append(":")
+                  .append(item.getPrice()).append(":")
+                  .append(item.getImgSrc());
+            }
+        
+        dos.writeUTF(response.toString());
+        dos.flush();
     }
 }
