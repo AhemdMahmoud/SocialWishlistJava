@@ -121,26 +121,19 @@ src/
 
 ### Setup Instructions
 
-1. **Clone the Repository**
-
-   ```bash
-   git clone <repository-url>
-   cd "Real one"
-   ```
-
-2. **Start Derby Database Server**
+1. **Start Derby Database Server**
    - Open NetBeans
    - Navigate to: Services → Databases → Java DB
    - Right-click and select "Start Server"
    - Verify server is running on `localhost:1527`
 
-3. **Build the Project**
+2. **Build the Project**
 
    ```bash
    mvn clean install
    ```
 
-4. **Run the Server**
+3. **Run the Server**
 
    ```bash
    # In NetBeans: Right-click ServerMain.java → Run File
@@ -150,7 +143,7 @@ src/
 
    Expected output: `Server started successfully!`
 
-5. **Run the Client Application**
+4. **Run the Client Application**
 
    ```bash
    # In NetBeans: Right-click Launcher.java → Run File
@@ -215,32 +208,8 @@ LOGIN:username:password
 
 **Solution**: Verify ServerMain is running and listening on port 5005
 
-## 🔜 Future Enhancements
-
-- [ ] Dashboard implementation after successful login
-- [ ] Session management and token-based authentication
-- [ ] Password encryption (hashing with bcrypt/argon2)
-- [ ] Email verification for registration
-- [ ] Password reset functionality
-- [ ] Remember me feature
-- [ ] Multi-language support
-
-## 👥 Team
-
-Developed as part of the ITI Digital Media course project.
-
-## 📄 License
-
-[Specify your license here]
-
-## 🙏 Acknowledgments
-
-- JavaFX community for excellent documentation
-- Apache Derby team for reliable database solution
-- ControlsFX for enhanced UI components
-
----
 
 **Last Updated**: January 2, 2026  
 **Version**: 1.0.0  
 **Status**: ✅ Login/Registration Module Complete
+
