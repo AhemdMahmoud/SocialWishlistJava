@@ -1,0 +1,157 @@
+/* Google Fonts Import (Simulation - in real app, load font in Java) */
+/* Using generic sans-serif that looks like Roboto/Inter */
+
+.root-background {
+    -fx-background-color: #F0F4F8;
+    /* Light grey/blue background */
+    -fx-font-family: "Segoe UI", "Roboto", "Helvetica", sans-serif;
+}
+
+/* --- Main Card --- */
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 15px;
+    /* Rounded corners for the whole card */
+    /* Deep shadow for floating effect */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.15), 30, 0, 0, 10);
+    -fx-min-width: 800px;
+    -fx-min-height: 500px;
+}
+
+/* --- Left Panel (Branding) --- */
+.branding-panel {
+    -fx-background-color: #1a7ac5;
+    /* Primary Blue */
+    -fx-background-radius: 15 0 0 15;
+    /* TopLeft, TopRight, BotRight, BotLeft */
+}
+
+/* Removed unused brand-icon-svg and brand-title classes */
+
+.brand-tagline {
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+/* --- Right Panel (Form) --- */
+.form-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 0 15 15 0;
+}
+
+.form-header {
+    -fx-text-fill: #333333;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 20 0;
+}
+
+/* --- Input Fields --- */
+.text-input {
+    -fx-background-color: white;
+    -fx-border-color: #E0E0E0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 12px;
+    -fx-font-size: 14px;
+}
+
+.text-input:focused {
+    -fx-border-color: #1976D2;
+    /* Blue when focused */
+    -fx-background-color: #F5F9FF;
+    /* Very light blue tint */
+}
+
+.email-field {
+    /* Specific styling if needed, currently same as generic */
+}
+
+/* --- Buttons --- */
+.primary-button {
+    -fx-background-color: #F57C00;
+    /* Orange Accent */
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #EF6C00;
+    /* Darker Orange */
+}
+
+.primary-button:pressed {
+    -fx-background-color: #E65100;
+}
+
+.secondary-button {
+    -fx-background-color: #1976D2;
+    /* Branding Blue */
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #1565C0;
+    /* Darker Blue */
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #0D47A1;
+}
+
+/* Eye Icon Button */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #757575;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-padding: 5;
+}
+
+.icon-button:hover {
+    -fx-text-fill: #1976D2;
+}
+
+/* --- Links --- */
+.forgot-link {
+    -fx-text-fill: #1976D2;
+    -fx-underline: false;
+    -fx-font-size: 13px;
+    -fx-border-color: transparent;
+}
+
+.forgot-link:visited {
+    -fx-text-fill: #1976D2;
+}
+
+.forgot-link:hover {
+    -fx-underline: true;
+}
+
+/* Inline Messages */
+.message-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 5;
+}
+
+.message-error {
+    -fx-text-fill: #e74c3c;
+    /* Red */
+}
+
+.message-success {
+    -fx-text-fill: #27ae60;
+    /* Green */
+}
