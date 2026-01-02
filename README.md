@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # i-Wish Project Setup
 
 Welcome to the **i-Wish** team development repository. This is your starting point.
@@ -77,3 +78,7 @@ Categories included: Electronics, Fashion, Home & Living, Sports & Fitness.
 - **Database**: Auto-initializes from `database/schema.sql`
 - **Port**: Server runs on port `5000`
 - **Database URL**: `jdbc:derby://localhost:1527/iwish_db`
+=======
+# SocialWishlistJava
+project
+>>>>>>> d8ee83af141711cae037a1d62dc29a45eeec0d3b
