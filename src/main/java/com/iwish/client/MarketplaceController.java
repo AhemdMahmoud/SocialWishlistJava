@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class MarketplaceController implements Initializable {
 
@@ -129,5 +130,32 @@ public class MarketplaceController implements Initializable {
     private void handleAddToWishlist(Item item) {
         System.out.println("Added to wishlist: " + item.getName());
         // TODO: distinct logic for adding to personal wishlist (Server request)
+    }
+
+    @FXML
+    private void handleHome() {
+        System.out.println("Already on Home");
+    }
+
+    @FXML
+    private void handleWishlist() {
+        try {
+            Stage stage = (Stage) gridPane.getScene().getWindow();
+            WishlistPage wishlistPage = new WishlistPage(stage);
+            stage.setScene(wishlistPage.createWishlistScene());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleFriends() {
+        try {
+            Stage stage = (Stage) gridPane.getScene().getWindow();
+            FriendProfilePage friendPage = new FriendProfilePage(stage, "Ahmed"); // Default friend for now
+            stage.setScene(friendPage.createFriendProfileScene());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
