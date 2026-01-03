@@ -20,6 +20,8 @@ public class ClientMain extends Application {
         // To show Friend's Profile page:
 //        FriendProfilePage friendPage = new FriendProfilePage(primaryStage, "Ahmed");
 //        Scene scene = friendPage.createFriendProfileScene();
+        
+        
         primaryStage.setTitle("i-Wish Client");
         primaryStage.setScene(scene);
         primaryStage.show();
