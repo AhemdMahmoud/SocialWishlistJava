@@ -18,9 +18,8 @@ public class DatabaseManager {
     // HikariCP DataSource
     private static com.zaxxer.hikari.HikariDataSource dataSource;
 
-    // Database configuration
-    // Using Embedded Driver so no separate server process is needed
-    private static final String DB_URL = "jdbc:derby:iwish_db;create=true";
+    // Database configuration - Network Derby Server
+    private static final String DB_URL = "jdbc:derby://localhost:1527/iwishdb";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
 
@@ -31,22 +30,23 @@ public class DatabaseManager {
                 config.setJdbcUrl(DB_URL);
                 config.setUsername(USER);
                 config.setPassword(PASSWORD);
-                config.setDriverClassName("org.apache.derby.jdbc.EmbeddedDriver");
-                
+                config.setDriverClassName("org.apache.derby.jdbc.ClientDriver");
+
                 // HikariCP settings (basic tuning)
                 config.setMaximumPoolSize(10);
                 config.setMinimumIdle(2);
                 config.setIdleTimeout(30000);
                 config.setConnectionTimeout(3000);
-                
+
                 dataSource = new com.zaxxer.hikari.HikariDataSource(config);
             }
 
             // Test connection
             try (Connection conn = dataSource.getConnection()) {
                 if (!tablesExist(conn)) {
-                    System.out.println("Tables not found. Initializing database from schema.sql...");
-                    createTables(conn);
+                    System.out.println("Tables not found. Please run migration script first!");
+                    System.out.println("See: database/MIGRATION_TO_NETWORK_DERBY.sql");
+                    return false;
                 }
                 return true;
             }
@@ -62,7 +62,7 @@ public class DatabaseManager {
         }
         return dataSource.getConnection();
     }
-    
+
     public void shutdown() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
@@ -78,81 +78,61 @@ public class DatabaseManager {
         }
     }
 
-    private void createTables(Connection conn) {
-        File schemaFile = new File("database/schema.sql");
-        if (!schemaFile.exists()) {
-            System.err.println("CRITICAL ERROR: database/schema.sql not found!");
-            return;
+    // ========== Authentication Methods ==========
+
+    /**
+     * Register a new user
+     * 
+     * @return user_id if successful, -1 if username already exists
+     */
+    public int registerUser(String username, String password, String email) throws SQLException {
+        if (dataSource == null)
+            connect();
+
+        String sql = "INSERT INTO Users (username, password, email) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+                java.sql.PreparedStatement pst = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+
+            pst.setString(1, username);
+            pst.setString(2, password); // TODO: Hash password in production
+            pst.setString(3, email);
+            pst.executeUpdate();
+
+            java.sql.ResultSet rs = pst.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            if (e.getSQLState().equals("23505")) { // Unique constraint violation
+                return -1; // Username already exists
+            }
+            throw e;
         }
+        return -1;
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(schemaFile));
-                Statement stmt = conn.createStatement()) {
+    /**
+     * Authenticate user login
+     * 
+     * @return user_id if successful, -1 if failed
+     */
+    public int loginUser(String username, String password) throws SQLException {
+        if (dataSource == null)
+            connect();
 
-            StringBuilder sql = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith("--") || line.trim().isEmpty()) continue;
-                
-                sql.append(line).append(" ");
-                if (line.trim().endsWith(";")) {
-                    String command = sql.toString().replace(";", "").trim();
-                    try {
-                        stmt.execute(command);
-                        System.out.println("Executed: " + command.substring(0, Math.min(command.length(), 30)) + "...");
-                    } catch (SQLException e) {
-                        System.err.println("Error executing: " + command);
-                         // Don't fail entire script on one error (e.g. drop table if exists)
-                    }
-                    sql = new StringBuilder();
+        String sql = "SELECT user_id FROM Users WHERE username = ? AND password = ?";
+        try (Connection conn = getConnection();
+                java.sql.PreparedStatement pst = conn.prepareStatement(sql)) {
+
+            pst.setString(1, username);
+            pst.setString(2, password); // TODO: Hash comparison in production
+
+            try (java.sql.ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("user_id");
                 }
             }
-            System.out.println("Database initialization complete.");
-            
-            // Seed initial data
-            seedData(conn);
-
-        } catch (IOException | SQLException e) {
-            e.printStackTrace();
         }
-    }
-    
-    private void seedData(Connection conn) {
-        File seedFile = new File("src/main/java/com/iwish/database/seed_data.sql");
-        if (!seedFile.exists()) {
-            System.out.println("No seed data found.");
-            return;
-        }
-        System.out.println("Seeding database...");
-        // Re-use logic or just run the script. For simplicity, similar logic:
-        try (BufferedReader reader = new BufferedReader(new FileReader(seedFile));
-             Statement stmt = conn.createStatement()) {
-             
-             // Check if items already exist to avoid duplicates
-             try (java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM WISHLIST")) {
-                 if (rs.next() && rs.getInt(1) > 0) {
-                     System.out.println("Database already contains items. Skipping seed.");
-                     return;
-                 }
-             }
-
-             StringBuilder sql = new StringBuilder();
-             String line;
-             while ((line = reader.readLine()) != null) {
-                 if (line.trim().startsWith("--") || line.trim().isEmpty()) continue;
-                 sql.append(line).append(" ");
-                 if (line.trim().endsWith(";")) {
-                     String command = sql.toString().replace(";", "").trim();
-                     try {
-                         stmt.execute(command);
-                     } catch (SQLException e) {
-                         System.err.println("Error seeding: " + command);
-                     }
-                     sql = new StringBuilder();
-                 }
-             }
-             System.out.println("Seeding complete.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return -1; // Login failed
     }
 }

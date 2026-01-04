@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
@@ -13,10 +13,8 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
-<?import javafx.scene.text.Font?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1500.0" stylesheets="@marketplace.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.client.MarketplaceController">
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1500.0" stylesheets="@marketplace.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.client.MarketplaceController">
    
    <!-- Left Sidebar -->
    <left>
@@ -25,43 +23,43 @@
             <!-- Logo area -->
             <VBox styleClass="logo-container">
                <children>
-                  <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fitHeight="140.0" fitWidth="84.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@Logo.png" />
+                        <Image url="@Logo%20p.png" />
                      </image>
                   </ImageView>
                </children>
             </VBox>
             
             <!-- Navigation -->
-            <VBox spacing="10.0" VBox.vgrow="ALWAYS" alignment="TOP_CENTER">
+            <VBox alignment="TOP_CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
                <children>
                   <!-- Home Button -->
                   <VBox fx:id="btnHome" onMouseClicked="#handleHome" styleClass="nav-btn, active">
-                      <Label text="🏠" styleClass="nav-icon"/>
-                      <Label text="Home" styleClass="nav-text"/>
+                      <Label styleClass="nav-icon" text="🏠" />
+                      <Label styleClass="nav-text" text="Home" textAlignment="CENTER" />
                   </VBox>
                   
                   <!-- My Wishlist Button -->
                   <VBox fx:id="btnWishlist" onMouseClicked="#handleWishlist" styleClass="nav-btn">
-                      <Label text="♥" styleClass="nav-icon"/>
-                      <Label text="My Wishlist" styleClass="nav-text"/>
+                      <Label styleClass="nav-icon" text="♥" />
+                      <Label styleClass="nav-text" text="My Wishlist" />
                   </VBox>
                   
                   <!-- Friends Button -->
                   <VBox fx:id="btnFriends" onMouseClicked="#handleFriends" styleClass="nav-btn">
-                      <Label text="👥" styleClass="nav-icon"/>
-                      <Label text="Friends" styleClass="nav-text"/>
+                      <Label styleClass="nav-icon" text="👥" />
+                      <Label styleClass="nav-text" text="Friends" />
                   </VBox>
                   
                   <!-- Notifications Button -->
                   <VBox fx:id="btnNotifications" styleClass="nav-btn">
                       <children>
                           <HBox alignment="TOP_CENTER" spacing="-8">
-                              <Label text="🔔" styleClass="nav-icon"/>
+                              <Label styleClass="nav-icon" text="🔔" />
                               <Circle fill="#e74c3c" radius="5.0" stroke="WHITE" strokeWidth="1.0" />
                           </HBox>
-                          <Label text="Notifications" styleClass="nav-text"/>
+                          <Label styleClass="nav-text" text="Notifications" />
                       </children>
                   </VBox>
                </children>
@@ -71,11 +69,11 @@
             </VBox>
             
             <!-- Bottom Actions -->
-            <VBox spacing="10.0" alignment="BOTTOM_CENTER">
+            <VBox alignment="BOTTOM_CENTER" spacing="10.0">
                <children>
                    <VBox styleClass="nav-btn">
-                       <Label text="➜" styleClass="nav-icon"/>
-                       <Label text="Logout" styleClass="nav-text"/>
+                       <Label styleClass="nav-icon" text="➜" />
+                       <Label styleClass="nav-text" text="Logout" />
                    </VBox>
                </children>
                <padding>

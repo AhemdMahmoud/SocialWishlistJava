@@ -21,7 +21,8 @@ CREATE TABLE Friends (
     FOREIGN KEY (friend_id) REFERENCES Users(user_id) ON DELETE CASCADE
 );
 
--- WishList Table (The Catalog)
+-- WishList Table (Global Marketplace Catalog)
+-- This is the shared catalog of ALL available items
 CREATE TABLE WishList (
     item_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
     item_name VARCHAR(200) NOT NULL,
@@ -30,7 +31,8 @@ CREATE TABLE WishList (
     img_src VARCHAR(500)
 );
 
--- UserWishes Table (The Link)
+-- UserWishes Table (Personal Wishlist Selection)
+-- Links users to items they want from the marketplace
 CREATE TABLE UserWishes (
     wish_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
     user_id INT NOT NULL,

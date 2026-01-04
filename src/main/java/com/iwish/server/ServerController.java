@@ -32,7 +32,7 @@ public class ServerController {
     private ExecutorService executor = Executors.newCachedThreadPool();
     private DatabaseManager dbManager;
     private int clientCount = 0;
-    
+
     // Uptime tracking
     private Timer uptimeTimer;
     private int uptimeSeconds = 0;
@@ -56,7 +56,8 @@ public class ServerController {
     }
 
     private void startServer() {
-        if (isRunning) return;
+        if (isRunning)
+            return;
 
         displayStatus("Starting...", "Stopped"); // Temporary state
 
@@ -90,20 +91,32 @@ public class ServerController {
                             log("New client connected: " + clientSocket.getInetAddress());
                             updateClientCount();
                         });
-                        
+
                         // Handle client in new thread
                         executor.submit(new ClientHandler(clientSocket, dbManager));
-                        
+
                     } catch (IOException e) {
                         if (isRunning) {
                             Platform.runLater(() -> log("Error accepting client: " + e.getMessage()));
                         }
                     }
                 }
+            } catch (java.net.BindException e) {
+                // Port already in use
+                Platform.runLater(() -> {
+                    log("ERROR: Port 5000 is already in use!");
+                    log("Another server instance may be running.");
+                    log("Solution: Stop other server or use different port.");
+                    serverToggle.setSelected(false);
+                    serverToggle.setText("Start Server");
+                    updateStatus("Stopped");
+                });
             } catch (IOException e) {
                 Platform.runLater(() -> {
                     log("Server error: " + e.getMessage());
-                    stopServer(); // Cleanup if failedstart
+                    serverToggle.setSelected(false);
+                    serverToggle.setText("Start Server");
+                    updateStatus("Stopped");
                 });
             }
         });
@@ -143,7 +156,7 @@ public class ServerController {
     private void updateClientCount() {
         connectionCountLabel.setText(String.valueOf(clientCount));
     }
-    
+
     private void startUptimeCounter() {
         uptimeSeconds = 0;
         uptimeTimer = new Timer(true);
@@ -155,7 +168,7 @@ public class ServerController {
             }
         }, 1000, 1000);
     }
-    
+
     private void stopUptimeCounter() {
         if (uptimeTimer != null) {
             uptimeTimer.cancel();
@@ -164,9 +177,10 @@ public class ServerController {
         uptimeSeconds = 0;
         Platform.runLater(() -> updateUptimeLabel()); // or leave it at last value? decided to reset
     }
-    
+
     private void updateUptimeLabel() {
-        if (uptimeLabel == null) return;
+        if (uptimeLabel == null)
+            return;
         int hours = uptimeSeconds / 3600;
         int minutes = (uptimeSeconds % 3600) / 60;
         int seconds = uptimeSeconds % 60;

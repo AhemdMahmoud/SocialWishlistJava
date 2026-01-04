@@ -7,7 +7,7 @@
 /* Sidebar */
 /* Sidebar */
 .sidebar {
-    -fx-background-color: #1976D2; /* Darker Blue to match other pages */
+    -fx-background-color: #1a7ac5; /* Darker Blue to match other pages */
     -fx-pref-width: 104;
     -fx-padding: 20 0 20 0;
     -fx-alignment: top-center;
@@ -16,7 +16,7 @@
 
 .logo-container {
     -fx-alignment: center;
-    -fx-background-color: #1565C0;
+    -fx-background-color: 1a7ac5;
     -fx-background-radius: 5;
     -fx-padding: 10;
 }

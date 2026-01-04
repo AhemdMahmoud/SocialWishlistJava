@@ -1,34 +1,24 @@
 package com.iwish.models;
 
-import java.math.BigDecimal; // This import is no longer needed if BigDecimal is removed
-
 public class Item {
     private int id;
     private String name;
-    private double price; // Changed from BigDecimal to double
+    private double price;
     private String description;
-    private String imgSrc; // New field
+    private String imgSrc;
 
     public Item() {
     }
 
-    // Original constructor removed as price type changed and new constructors are provided
-    // public Item(int id, String name, BigDecimal price, String description) {
-    //     this.id = id;
-    //     this.name = name;
-    //     this.price = price;
-    //     this.description = description;
-    // }
-
-    // New constructor
+    // Constructor for marketplace display
     public Item(int id, String name, double price) {
         this.id = id;
         this.name = name;
         this.price = price;
-        this.imgSrc = ""; // Default empty
+        this.imgSrc = "";
     }
 
-    // New constructor
+    // Constructor with image
     public Item(int id, String name, double price, String imgSrc) {
         this.id = id;
         this.name = name;
@@ -52,19 +42,19 @@ public class Item {
         this.name = name;
     }
 
-    public double getPrice() { // Changed return type
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) { // Changed parameter type
+    public void setPrice(double price) {
         this.price = price;
     }
 
-    public String getImgSrc() { // New getter
+    public String getImgSrc() {
         return imgSrc;
     }
 
-    public void setImgSrc(String imgSrc) { // New setter
+    public void setImgSrc(String imgSrc) {
         this.imgSrc = imgSrc;
     }
 
