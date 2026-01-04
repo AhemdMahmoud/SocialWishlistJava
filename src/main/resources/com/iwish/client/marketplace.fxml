@@ -14,8 +14,10 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1500.0" stylesheets="@marketplace.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.client.MarketplaceController">
-   
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1500.0" stylesheets="@marketplace.css"
+   xmlns="http://javafx.com/javafx/25"
+   xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.client.MarketplaceController">
+
    <!-- Left Sidebar -->
    <left>
       <VBox styleClass="sidebar" BorderPane.alignment="CENTER">
@@ -30,51 +32,51 @@
                   </ImageView>
                </children>
             </VBox>
-            
+
             <!-- Navigation -->
             <VBox alignment="TOP_CENTER" spacing="10.0" VBox.vgrow="ALWAYS">
                <children>
                   <!-- Home Button -->
                   <VBox fx:id="btnHome" onMouseClicked="#handleHome" styleClass="nav-btn, active">
-                      <Label styleClass="nav-icon" text="🏠" />
-                      <Label styleClass="nav-text" text="Home" textAlignment="CENTER" />
+                     <Label styleClass="nav-icon" text="🏠" />
+                     <Label styleClass="nav-text" text="Home" textAlignment="CENTER" />
                   </VBox>
-                  
+
                   <!-- My Wishlist Button -->
                   <VBox fx:id="btnWishlist" onMouseClicked="#handleWishlist" styleClass="nav-btn">
-                      <Label styleClass="nav-icon" text="♥" />
-                      <Label styleClass="nav-text" text="My Wishlist" />
+                     <Label styleClass="nav-icon" text="♥" />
+                     <Label styleClass="nav-text" text="My Wishlist" />
                   </VBox>
-                  
+
                   <!-- Friends Button -->
                   <VBox fx:id="btnFriends" onMouseClicked="#handleFriends" styleClass="nav-btn">
-                      <Label styleClass="nav-icon" text="👥" />
-                      <Label styleClass="nav-text" text="Friends" />
+                     <Label styleClass="nav-icon" text="👥" />
+                     <Label styleClass="nav-text" text="Friends" />
                   </VBox>
-                  
+
                   <!-- Notifications Button -->
                   <VBox fx:id="btnNotifications" styleClass="nav-btn">
-                      <children>
-                          <HBox alignment="TOP_CENTER" spacing="-8">
-                              <Label styleClass="nav-icon" text="🔔" />
-                              <Circle fill="#e74c3c" radius="5.0" stroke="WHITE" strokeWidth="1.0" />
-                          </HBox>
-                          <Label styleClass="nav-text" text="Notifications" />
-                      </children>
+                     <children>
+                        <HBox alignment="TOP_CENTER" spacing="-8">
+                           <Label styleClass="nav-icon" text="🔔" />
+                           <Circle fill="#e74c3c" radius="5.0" stroke="WHITE" strokeWidth="1.0" />
+                        </HBox>
+                        <Label styleClass="nav-text" text="Notifications" />
+                     </children>
                   </VBox>
                </children>
                <padding>
                   <Insets top="20.0" />
                </padding>
             </VBox>
-            
+
             <!-- Bottom Actions -->
             <VBox alignment="BOTTOM_CENTER" spacing="10.0">
                <children>
-                   <VBox styleClass="nav-btn">
-                       <Label styleClass="nav-icon" text="➜" />
-                       <Label styleClass="nav-text" text="Logout" />
-                   </VBox>
+                  <VBox styleClass="nav-btn">
+                     <Label styleClass="nav-icon" text="➜" />
+                     <Label styleClass="nav-text" text="Logout" />
+                  </VBox>
                </children>
                <padding>
                   <Insets bottom="20.0" />
@@ -83,7 +85,7 @@
          </children>
       </VBox>
    </left>
-   
+
    <!-- Main Content Area -->
    <center>
       <VBox spacing="20.0" styleClass="main-content" BorderPane.alignment="CENTER">
@@ -93,7 +95,7 @@
                <children>
                   <Label styleClass="header-label" text="Home" />
                   <Region HBox.hgrow="ALWAYS" />
-                  
+
                   <!-- Search Bar -->
                   <HBox alignment="CENTER_LEFT" prefHeight="45.0" prefWidth="400.0" styleClass="search-container">
                      <children>
@@ -101,9 +103,9 @@
                         <TextField fx:id="searchField" promptText="Search for items..." styleClass="search-field" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
-                  
-                   <Region HBox.hgrow="ALWAYS" />
-                  
+
+                  <Region HBox.hgrow="ALWAYS" />
+
                   <!-- Profile Icon -->
                   <Circle fill="DODGERBLUE" radius="20.0" stroke="WHITE" strokeType="INSIDE" />
                </children>
@@ -111,14 +113,14 @@
                   <Insets bottom="10.0" top="10.0" />
                </padding>
             </HBox>
-            
+
             <!-- Items Grid -->
             <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
                <content>
                   <GridPane fx:id="gridPane" hgap="25.0" vgap="25.0">
-                    <rowConstraints>
-                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
+                     <rowConstraints>
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                     </rowConstraints>
                      <padding>
                         <Insets bottom="20.0" left="10.0" right="10.0" top="10.0" />
                      </padding>

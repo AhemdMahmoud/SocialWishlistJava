@@ -2,47 +2,53 @@ package com.iwish.models;
 
 import java.sql.Timestamp;
 
-/**
- * FriendRequest model - represents a pending friend request
- */
 public class FriendRequest {
     private int friendshipId;
-    private int requesterId;
-    private String requesterUsername;
-    private String requesterEmail;
+    private int userId;
+    private String username;
     private Timestamp requestDate;
-
-    public FriendRequest(int friendshipId, int requesterId, String requesterUsername,
-            String requesterEmail, Timestamp requestDate) {
+    
+    public FriendRequest(int friendshipId, int userId, String username, Timestamp requestDate) {
         this.friendshipId = friendshipId;
-        this.requesterId = requesterId;
-        this.requesterUsername = requesterUsername;
-        this.requesterEmail = requesterEmail;
+        this.userId = userId;
+        this.username = username;
         this.requestDate = requestDate;
     }
-
+    
     public int getFriendshipId() {
         return friendshipId;
     }
-
-    public int getRequesterId() {
-        return requesterId;
+    
+    public void setFriendshipId(int friendshipId) {
+        this.friendshipId = friendshipId;
     }
-
-    public String getRequesterUsername() {
-        return requesterUsername;
+    
+    public int getUserId() {
+        return userId;
     }
-
-    public String getRequesterEmail() {
-        return requesterEmail;
+    
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
-
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
     public Timestamp getRequestDate() {
         return requestDate;
     }
-
+    
+    public void setRequestDate(Timestamp requestDate) {
+        this.requestDate = requestDate;
+    }
+    
     @Override
     public String toString() {
-        return requesterUsername + " (pending)";
+        return username + " (requested " + requestDate + ")";
     }
 }

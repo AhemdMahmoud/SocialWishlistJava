@@ -1,6 +1,9 @@
 package com.iwish.client;
 
 import com.iwish.models.Item;
+import com.iwish.models.Friend;
+import com.iwish.models.FriendRequest;
+import com.iwish.models.User;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -196,27 +199,15 @@ public class NetworkManager {
         }
     }
 
-    // ========== Getters ==========
-
-    public int getCurrentUserId() {
-        return currentUserId;
-    }
-
-    public String getCurrentUsername() {
-        return currentUsername;
-    }
-
-    public boolean isConnected() {
-        return socket != null && !socket.isClosed();
-    }
-
     // ========== Friends Methods ==========
 
     /**
-     * Get user's friends list
+     * Get list of accepted friends
+     * 
+     * @return List of Friend objects
      */
-    public List<com.iwish.models.Friend> getFriends(int userId) {
-        List<com.iwish.models.Friend> friends = new ArrayList<>();
+    public List<Friend> getFriends(int userId) {
+        List<Friend> friends = new ArrayList<>();
         try {
             dos.writeUTF("GET_FRIENDS##" + userId);
             String response = dis.readUTF();
@@ -224,11 +215,17 @@ public class NetworkManager {
             String[] parts = response.split("##");
             if ("SUCCESS".equals(parts[0])) {
                 for (int i = 2; i < parts.length; i++) {
-                    String[] friendData = parts[i].split(":");
-                    if (friendData.length >= 2) {
-                        int friendId = Integer.parseInt(friendData[0]);
-                        String username = friendData[1];
-                        friends.add(new com.iwish.models.Friend(friendId, username, "", 0));
+                    String friendStr = parts[i];
+                    String[] friendParts = friendStr.split(":");
+
+                    if (friendParts.length >= 2) {
+                        try {
+                            int friendUserId = Integer.parseInt(friendParts[0]);
+                            String username = friendParts[1];
+                            friends.add(new Friend(friendUserId, username));
+                        } catch (NumberFormatException e) {
+                            System.err.println("Error parsing friend: " + friendStr);
+                        }
                     }
                 }
             }
@@ -240,9 +237,11 @@ public class NetworkManager {
 
     /**
      * Get pending friend requests
+     * 
+     * @return List of FriendRequest objects
      */
-    public List<com.iwish.models.FriendRequest> getFriendRequests(int userId) {
-        List<com.iwish.models.FriendRequest> requests = new ArrayList<>();
+    public List<FriendRequest> getFriendRequests(int userId) {
+        List<FriendRequest> requests = new ArrayList<>();
         try {
             dos.writeUTF("GET_FRIEND_REQUESTS##" + userId);
             String response = dis.readUTF();
@@ -250,12 +249,36 @@ public class NetworkManager {
             String[] parts = response.split("##");
             if ("SUCCESS".equals(parts[0])) {
                 for (int i = 2; i < parts.length; i++) {
-                    String[] requestData = parts[i].split(":");
-                    if (requestData.length >= 2) {
-                        int friendshipId = Integer.parseInt(requestData[0]);
-                        String username = requestData[1];
-                        requests.add(new com.iwish.models.FriendRequest(
-                                friendshipId, 0, username, "", null));
+                    String reqStr = parts[i];
+                    String[] reqParts = reqStr.split(":");
+
+                    if (reqParts.length >= 3) {
+                        try {
+                            int friendshipId = Integer.parseInt(reqParts[0]);
+                            int fromUserId = Integer.parseInt(reqParts[1]);
+                            String username = reqParts[2];
+                            // Note: Request date handling might be needed if sent by server, skipping for
+                            // now as per simplicity or add if needed
+                            // Constructing FriendRequest with 0 or minimal args if server doesn't send date
+                            // Assuming model has constructor: FriendRequest(int friendshipId, int
+                            // fromUserId, String username, Timestamp requestDate)
+                            // We might need to adjust this if we don't have date from server text protocol
+                            // easily, or parse it.
+                            // For now, let's pass null for date or update server to send it properly if
+                            // needed.
+                            // The server protocol says: friendshipId:userId:username:date
+
+                            java.sql.Timestamp date = null;
+                            if (reqParts.length >= 4) {
+                                // Simple parsing or just null for now to avoid format errors unless we know
+                                // format
+                                // date = java.sql.Timestamp.valueOf(reqParts[3]);
+                            }
+
+                            requests.add(new FriendRequest(friendshipId, fromUserId, username, date));
+                        } catch (NumberFormatException e) {
+                            System.err.println("Error parsing request: " + reqStr);
+                        }
                     }
                 }
             }
@@ -266,7 +289,7 @@ public class NetworkManager {
     }
 
     /**
-     * Send friend request by username
+     * Send friend request to user
      */
     public boolean addFriend(int userId, String friendUsername) {
         try {
@@ -308,7 +331,7 @@ public class NetworkManager {
     }
 
     /**
-     * Remove friend
+     * Remove existing friend
      */
     public boolean removeFriend(int userId, int friendId) {
         try {
@@ -322,10 +345,10 @@ public class NetworkManager {
     }
 
     /**
-     * Search users by username
+     * Search for users by username
      */
-    public List<com.iwish.models.User> searchUsers(String query) {
-        List<com.iwish.models.User> users = new ArrayList<>();
+    public List<User> searchUsers(String query) {
+        List<User> users = new ArrayList<>();
         try {
             dos.writeUTF("SEARCH_USERS##" + query);
             String response = dis.readUTF();
@@ -333,11 +356,17 @@ public class NetworkManager {
             String[] parts = response.split("##");
             if ("SUCCESS".equals(parts[0])) {
                 for (int i = 2; i < parts.length; i++) {
-                    String[] userData = parts[i].split(":");
-                    if (userData.length >= 2) {
-                        int userId = Integer.parseInt(userData[0]);
-                        String username = userData[1];
-                        users.add(new com.iwish.models.User(userId, username, ""));
+                    String userStr = parts[i];
+                    String[] userParts = userStr.split(":");
+
+                    if (userParts.length >= 2) {
+                        try {
+                            int userId = Integer.parseInt(userParts[0]);
+                            String username = userParts[1];
+                            users.add(new User(userId, username));
+                        } catch (NumberFormatException e) {
+                            System.err.println("Error parsing user: " + userStr);
+                        }
                     }
                 }
             }
@@ -345,6 +374,20 @@ public class NetworkManager {
             e.printStackTrace();
         }
         return users;
+    }
+
+    // ========== Getters ==========
+
+    public int getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public String getCurrentUsername() {
+        return currentUsername;
+    }
+
+    public boolean isConnected() {
+        return socket != null && !socket.isClosed();
     }
 
     public void close() {

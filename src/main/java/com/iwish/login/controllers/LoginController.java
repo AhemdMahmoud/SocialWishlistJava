@@ -1,19 +1,26 @@
 package com.iwish.login.controllers;
 
 import com.iwish.client.NetworkManager;
-import java.io.IOException;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class LoginController {
 
-    // --- Login Fields ---
     @FXML
     private VBox loginForm;
+    @FXML
+    private VBox registerForm;
+
     @FXML
     private TextField usernameField;
     @FXML
@@ -21,11 +28,8 @@ public class LoginController {
     @FXML
     private TextField passwordVisibleField;
     @FXML
-    private Label loginMessageLabel; // Inline Message
+    private Label loginMessageLabel;
 
-    // --- Register Fields ---
-    @FXML
-    private VBox registerForm;
     @FXML
     private TextField regUsernameField;
     @FXML
@@ -39,7 +43,7 @@ public class LoginController {
     @FXML
     private TextField regConfirmPasswordVisibleField;
     @FXML
-    private Label registerMessageLabel; // Inline Message
+    private Label registerMessageLabel;
 
     private boolean isPasswordVisible = false;
     private boolean isRegPasswordVisible = false;
@@ -47,177 +51,152 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        if (loginForm != null && registerForm != null) {
-            loginForm.setVisible(true);
-            registerForm.setVisible(false);
-        }
-
-        setupPasswordReveal(passwordField, passwordVisibleField);
-        setupPasswordReveal(regPasswordField, regPasswordVisibleField);
-        setupPasswordReveal(regConfirmPasswordField, regConfirmPasswordVisibleField);
-
-        // Initial Connection Check
-        if (!NetworkManager.getInstance().connect()) {
-            showLoginMessage("Server Unavailable: Check Connection", true);
+        // Connect to server on startup
+        NetworkManager nm = NetworkManager.getInstance();
+        if (!nm.isConnected()) {
+            if (!nm.connect()) {
+                showError(loginMessageLabel, "Could not connect to server. Check if server is running.");
+            }
         }
     }
 
-    private void setupPasswordReveal(PasswordField pf, TextField tf) {
-        if (tf != null && pf != null) {
-            tf.managedProperty().bind(tf.visibleProperty());
-            tf.visibleProperty().bind(pf.visibleProperty().not());
-            tf.textProperty().bindBidirectional(pf.textProperty());
+    @FXML
+    private void handleSignIn() {
+        String username = usernameField.getText().trim();
+        String password = isPasswordVisible ? passwordVisibleField.getText() : passwordField.getText();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            showError(loginMessageLabel, "Please enter username and password");
+            return;
+        }
+
+        int userId = NetworkManager.getInstance().login(username, password);
+        if (userId != -1) {
+            System.out.println("Login successful! User ID: " + userId);
+            navigateToHome();
+        } else {
+            showError(loginMessageLabel, "Invalid username or password");
         }
     }
 
-    // --- Navigation & State Reset ---
+    @FXML
+    private void handleRegister() {
+        String username = regUsernameField.getText().trim();
+        String email = regEmailField.getText().trim();
+        String password = isRegPasswordVisible ? regPasswordVisibleField.getText() : regPasswordField.getText();
+        String confirm = isRegConfirmPasswordVisible ? regConfirmPasswordVisibleField.getText()
+                : regConfirmPasswordField.getText();
+
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+            showError(registerMessageLabel, "All fields are required");
+            return;
+        }
+
+        if (!password.equals(confirm)) {
+            showError(registerMessageLabel, "Passwords do not match");
+            return;
+        }
+
+        int userId = NetworkManager.getInstance().register(username, password, email);
+        if (userId != -1) {
+            System.out.println("Registration successful! User ID: " + userId);
+            navigateToHome();
+        } else {
+            showError(registerMessageLabel, "Registration failed");
+        }
+    }
+
+    private void navigateToHome() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/home_view.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) loginForm.getScene().getWindow();
+            Scene scene = new Scene(root, 1024, 768);
+            scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/friends.css").toExternalForm()); // Reusing
+                                                                                                                        // friends
+                                                                                                                        // css
+                                                                                                                        // or
+                                                                                                                        // creates
+                                                                                                                        // generic
+                                                                                                                        // main
+                                                                                                                        // css
+                                                                                                                        // later
+                                                                                                                        // if
+                                                                                                                        // needed
+            // Ideally we should have home.css or styles loaded in FXML.
+            // home_view.fxml does not have stylesheet attached in source, so we might want
+            // to attach one or rely on specific view styles
+
+            stage.setScene(scene);
+            stage.setTitle("i-Wish - Home");
+            stage.centerOnScreen();
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError(loginMessageLabel, "Error loading application");
+        }
+    }
+
     @FXML
     private void showRegister() {
         loginForm.setVisible(false);
         registerForm.setVisible(true);
-        clearMessages();
+        clearFields();
     }
 
     @FXML
     private void showLogin() {
         registerForm.setVisible(false);
         loginForm.setVisible(true);
-        clearMessages();
+        clearFields();
     }
 
-    private void clearMessages() {
-        if (loginMessageLabel != null) {
-            loginMessageLabel.setVisible(false);
-            loginMessageLabel.setManaged(false);
-        }
-        if (registerMessageLabel != null) {
-            registerMessageLabel.setVisible(false);
-            registerMessageLabel.setManaged(false);
-        }
-    }
-
-    // --- Helper for Inline Messages ---
-    private void showLoginMessage(String message, boolean isError) {
-        updateLabel(loginMessageLabel, message, isError);
-    }
-
-    private void showRegisterMessage(String message, boolean isError) {
-        updateLabel(registerMessageLabel, message, isError);
-    }
-
-    private void updateLabel(Label label, String message, boolean isError) {
-        if (label == null)
-            return;
-        label.setText(message);
-        label.getStyleClass().removeAll("message-error", "message-success");
-        label.getStyleClass().add(isError ? "message-error" : "message-success");
-        label.setVisible(true);
-        label.setManaged(true);
-    }
-
-    // --- Password Toggles ---
     @FXML
     private void togglePassword() {
         isPasswordVisible = !isPasswordVisible;
-        passwordField.setVisible(!isPasswordVisible);
-        passwordVisibleField.setVisible(isPasswordVisible);
+        toggleFieldVisibility(passwordField, passwordVisibleField, isPasswordVisible);
     }
 
     @FXML
     private void toggleRegPassword() {
         isRegPasswordVisible = !isRegPasswordVisible;
-        regPasswordField.setVisible(!isRegPasswordVisible);
-        regPasswordVisibleField.setVisible(isRegPasswordVisible);
+        toggleFieldVisibility(regPasswordField, regPasswordVisibleField, isRegPasswordVisible);
     }
 
     @FXML
     private void toggleRegConfirmPassword() {
         isRegConfirmPasswordVisible = !isRegConfirmPasswordVisible;
-        regConfirmPasswordField.setVisible(!isRegConfirmPasswordVisible);
-        regConfirmPasswordVisibleField.setVisible(isRegConfirmPasswordVisible);
+        toggleFieldVisibility(regConfirmPasswordField, regConfirmPasswordVisibleField, isRegConfirmPasswordVisible);
     }
 
-    // --- Actions ---
-    @FXML
-    private void handleSignIn() {
-        clearMessages();
-        String username = usernameField.getText();
-        String password = isPasswordVisible ? passwordVisibleField.getText() : passwordField.getText();
-
-        if (username.isEmpty() || password.isEmpty()) {
-            showLoginMessage("Please enter username and password.", true);
-            return;
+    private void toggleFieldVisibility(PasswordField pf, TextField tf, boolean visible) {
+        pf.setVisible(!visible);
+        tf.setVisible(visible);
+        if (visible) {
+            tf.setText(pf.getText());
+        } else {
+            pf.setText(tf.getText());
         }
-
-        // Use NetworkManager for login
-        com.iwish.client.NetworkManager nm = com.iwish.client.NetworkManager.getInstance();
-
-        // Run in background thread to avoid freezing UI
-        new Thread(() -> {
-            int userId = nm.login(username, password);
-
-            javafx.application.Platform.runLater(() -> {
-                if (userId != -1) {
-                    showLoginMessage("Login Successful! Redirecting...", false);
-
-                    // Navigate to Home page
-                    try {
-                        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                                getClass().getResource("/com/iwish/login/fxml/home_view.fxml"));
-                        javafx.scene.Parent root = loader.load();
-
-                        javafx.scene.Scene scene = new javafx.scene.Scene(root, 1024, 768);
-
-                        javafx.stage.Stage stage = (javafx.stage.Stage) usernameField.getScene().getWindow();
-                        stage.setScene(scene);
-                        stage.setTitle("i-Wish - Home");
-                        stage.centerOnScreen();
-                    } catch (java.io.IOException ex) {
-                        ex.printStackTrace();
-                        showLoginMessage("Error loading home page", true);
-                    }
-                } else {
-                    showLoginMessage("Invalid username or password", true);
-                }
-            });
-        }).start();
     }
 
-    @FXML
-    private void handleRegister() {
-        clearMessages();
-        String username = regUsernameField.getText();
-        String email = regEmailField.getText();
-        String pass = isRegPasswordVisible ? regPasswordVisibleField.getText() : regPasswordField.getText();
-        String confirm = isRegConfirmPasswordVisible ? regConfirmPasswordVisibleField.getText()
-                : regConfirmPasswordField.getText();
+    private void clearFields() {
+        usernameField.clear();
+        passwordField.clear();
+        passwordVisibleField.clear();
+        regUsernameField.clear();
+        regEmailField.clear();
+        regPasswordField.clear();
+        regPasswordVisibleField.clear();
+        regConfirmPasswordField.clear();
+        regConfirmPasswordVisibleField.clear();
+        loginMessageLabel.setVisible(false);
+        registerMessageLabel.setVisible(false);
+    }
 
-        if (username.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-            showRegisterMessage("All fields are required.", true);
-            return;
-        }
-
-        if (!pass.equals(confirm)) {
-            showRegisterMessage("Passwords do not match!", true);
-            return;
-        }
-
-        // Use NetworkManager for registration
-        com.iwish.client.NetworkManager nm = com.iwish.client.NetworkManager.getInstance();
-
-        new Thread(() -> {
-            int userId = nm.register(username, pass, email);
-
-            javafx.application.Platform.runLater(() -> {
-                if (userId != -1) {
-                    showRegisterMessage("Registration Successful! Please Sign In.", false);
-                    // Optional: Switch back to login form
-                    showLogin();
-                    showLoginMessage("Registration Successful! Please Sign In.", false);
-                } else {
-                    showRegisterMessage("Registration failed (username/email may be taken)", true);
-                }
-            });
-        }).start();
+    private void showError(Label label, String message) {
+        label.setText(message);
+        label.setVisible(true);
+        label.setManaged(true);
+        label.setStyle("-fx-text-fill: red;");
     }
 }

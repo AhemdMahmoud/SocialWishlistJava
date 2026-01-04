@@ -1,23 +1,23 @@
-package com.iwish.client;
+package com.iwish.login.controllers;
 
+import com.iwish.client.NetworkManager;
 import com.iwish.models.Item;
-import java.net.URL;
-import java.util.List;
-import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 
-public class MarketplaceController implements Initializable {
+import java.util.List;
+
+public class MarketplaceContentController {
 
     @FXML
     private TextField searchField;
@@ -28,20 +28,17 @@ public class MarketplaceController implements Initializable {
 
     private List<Item> allItems;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    public void initialize() {
         loadItems();
     }
 
     private void loadItems() {
-        // Run in background to avoid blocking UI
         new Thread(() -> {
             NetworkManager network = NetworkManager.getInstance();
-            if (network.connect()) {
+            if (network.isConnected()) {
                 allItems = network.getAllItems();
                 Platform.runLater(this::populateGrid);
-            } else {
-                Platform.runLater(() -> System.err.println("Failed to connect to server."));
             }
         }).start();
     }
@@ -49,7 +46,7 @@ public class MarketplaceController implements Initializable {
     private void populateGrid() {
         gridPane.getChildren().clear();
         int column = 0;
-        int row = 0; // Start at 0
+        int row = 0;
 
         if (allItems == null)
             return;
@@ -58,8 +55,9 @@ public class MarketplaceController implements Initializable {
             VBox card = createItemCard(item);
             gridPane.add(card, column++, row);
 
-            // Grid width 4 for wider screen
-            if (column == 4) {
+            // Grid width 3 or 4 depending on resize, let's stick to 3 for safe fit or 4 if
+            // wide
+            if (column == 3) {
                 column = 0;
                 row++;
             }
@@ -79,14 +77,20 @@ public class MarketplaceController implements Initializable {
         String imageUrl = item.getImgSrc();
         if (imageUrl != null && !imageUrl.isEmpty()) {
             try {
-                javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView(
-                        new javafx.scene.image.Image(imageUrl, true));
+                // Handle local paths if needed, or URLs
+                // For simplified logic, assuming URL or valid resource path
+                // Check if it's absolute file path (windows)
+                String validUrl = imageUrl;
+                if (imageUrl.startsWith("C:") || imageUrl.startsWith("G:")) {
+                    validUrl = "file:///" + imageUrl.replace("\\", "/");
+                }
+
+                ImageView imageView = new ImageView(new Image(validUrl, true));
                 imageView.setFitHeight(140);
                 imageView.setFitWidth(220);
                 imageView.setPreserveRatio(true);
                 imageContainer.getChildren().add(imageView);
             } catch (Exception e) {
-                // Fallback if image fails to load
                 Label imgLabel = new Label("IMG");
                 imgLabel.setStyle("-fx-text-fill: #bdc3c7; -fx-font-weight: bold;");
                 imageContainer.getChildren().add(imgLabel);
@@ -118,10 +122,10 @@ public class MarketplaceController implements Initializable {
         spacer.setPrefHeight(10);
 
         // Button
-        Button wishButton = new Button("Add to Wishlist"); // Heart icon could go here
+        Button wishButton = new Button("Add to Wishlist");
         wishButton.getStyleClass().add("add-btn");
-        wishButton.setMaxWidth(Double.MAX_VALUE); // Full width
-        wishButton.setOnAction(e -> handleAddToWishlist(item));
+        wishButton.setMaxWidth(Double.MAX_VALUE);
+        wishButton.setOnAction(e -> handleAddToWishlist(item, wishButton));
 
         content.getChildren().addAll(nameLabel, priceLabel, spacer, wishButton);
         card.getChildren().addAll(imageContainer, content);
@@ -129,35 +133,16 @@ public class MarketplaceController implements Initializable {
         return card;
     }
 
-    private void handleAddToWishlist(Item item) {
-        System.out.println("Added to wishlist: " + item.getName());
-        // TODO: distinct logic for adding to personal wishlist (Server request)
-    }
-
-    @FXML
-    private void handleHome() {
-        System.out.println("Already on Home");
-    }
-
-    @FXML
-    private void handleWishlist() {
-        try {
-            Stage stage = (Stage) gridPane.getScene().getWindow();
-            WishlistPage wishlistPage = new WishlistPage(stage);
-            stage.setScene(wishlistPage.createWishlistScene());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleFriends() {
-        try {
-            Stage stage = (Stage) gridPane.getScene().getWindow();
-            FriendProfilePage friendPage = new FriendProfilePage(stage, "Ahmed"); // Default friend for now
-            stage.setScene(friendPage.createFriendProfileScene());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void handleAddToWishlist(Item item, Button btn) {
+        new Thread(() -> {
+            boolean success = NetworkManager.getInstance()
+                    .addToWishlist(NetworkManager.getInstance().getCurrentUserId(), item.getId());
+            Platform.runLater(() -> {
+                if (success) {
+                    btn.setText("Added!");
+                    btn.setDisable(true);
+                }
+            });
+        }).start();
     }
 }

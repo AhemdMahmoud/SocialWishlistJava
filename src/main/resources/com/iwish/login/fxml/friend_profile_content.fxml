@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.shape.Circle?>
+
+<StackPane fx:id="rootStackPane"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.FriendProfileController" stylesheets="@../styles/friend_profile.css">
+
+    <VBox spacing="30" styleClass="profile-view">
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Button text="← Back" onAction="#handleBack" styleClass="cancel-button" style="-fx-pref-width: 100; -fx-pref-height: 40; -fx-font-size: 14;"/>
+            <Label text="Friend's Profile" styleClass="page-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <StackPane styleClass="user-icon-container">
+                <Circle radius="20" styleClass="user-icon-circle"/>
+                <Label text="👤" styleClass="user-icon-label"/>
+            </StackPane>
+        </HBox>
+
+        <!-- Profile Section -->
+        <HBox spacing="20" alignment="CENTER_LEFT" styleClass="profile-section">
+            <StackPane>
+                <Circle radius="50" styleClass="profile-avatar"/>
+                <Label text="😉" styleClass="profile-avatar-icon"/>
+            </StackPane>
+            <Label fx:id="friendNameLabel" text="Friend Name" styleClass="friend-name-large"/>
+        </HBox>
+
+        <!-- Wishlist Title -->
+        <Label fx:id="wishlistTitleLabel" text="Friend's Wishlist" styleClass="wishlist-title"/>
+
+        <!-- Wishlist Items -->
+        <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+            <VBox fx:id="itemsContainer" spacing="20" styleClass="items-container"/>
+        </ScrollPane>
+
+    </VBox>
+
+</StackPane>

@@ -1,12 +1,13 @@
 package com.iwish.login.controllers;
 
+import com.iwish.client.NetworkManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -21,31 +22,54 @@ public class HomeController {
     private Button friendsNavButton;
     @FXML
     private Button logoutButton;
+    
+    @FXML
+    private Label welcomeLabel;
 
     @FXML
     private StackPane contentArea;
-    // Removed @FXML homeView as it's not in FXML
+    
     private Parent friendsView;
+    // private Parent homeView; // TODO: Implement Home View separate FXML or Keep current logic
 
     @FXML
     public void initialize() {
+        // Set welcome message
+        NetworkManager nm = NetworkManager.getInstance();
+        if (welcomeLabel != null) {
+            welcomeLabel.setText("Welcome, " + nm.getCurrentUsername());
+        }
+        
         // Default state: Home active
-        setActiveButton(homeNavButton);
-        // Maybe load a welcome label or keep empty
+        handleHomeNav();
     }
 
     @FXML
     private void handleHomeNav() {
         setActiveButton(homeNavButton);
-        contentArea.getChildren().clear();
-        // contentArea.getChildren().add(homeView); // Removed until homeView is defined
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/marketplace_content.fxml"));
+            Parent marketplaceView = loader.load();
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(marketplaceView);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Error loading Marketplace");
+        }
     }
 
     @FXML
     private void handleWishlistNav() {
-        // Disabled in UI, but safe guard
         setActiveButton(wishlistNavButton);
-        // TODO: Load Wishlist View
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/wishlist_content.fxml"));
+            Parent wishlistView = loader.load();
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(wishlistView);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Error loading Wishlist");
+        }
     }
 
     @FXML
@@ -63,18 +87,28 @@ public class HomeController {
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Error loading Friends view: " + e.getMessage());
-            // Optionally show error in UI
+            showError("Error loading Friends View");
         }
+    }
+    
+    private void showError(String message) {
+        Label errorLabel = new Label(message);
+        errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 16px;");
+        contentArea.getChildren().clear();
+        contentArea.getChildren().add(errorLabel);
     }
 
     @FXML
     private void handleLogout() {
         try {
+            // Close connection
+            NetworkManager.getInstance().close();
+            
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/login_view.fxml"));
             Parent root = loader.load();
 
             Stage stage = (Stage) logoutButton.getScene().getWindow();
-            Scene scene = new Scene(root, 1024, 768);
+            Scene scene = new Scene(root, 900, 600);
             scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/login.css").toExternalForm());
 
             stage.setScene(scene);
@@ -86,11 +120,11 @@ public class HomeController {
 
     private void setActiveButton(Button activeButton) {
         // Reset all buttons style
-        homeNavButton.getStyleClass().remove("sidebar-button-active");
-        wishlistNavButton.getStyleClass().remove("sidebar-button-active");
-        friendsNavButton.getStyleClass().remove("sidebar-button-active");
+        if (homeNavButton != null) homeNavButton.getStyleClass().remove("sidebar-button-active");
+        if (wishlistNavButton != null) wishlistNavButton.getStyleClass().remove("sidebar-button-active");
+        if (friendsNavButton != null) friendsNavButton.getStyleClass().remove("sidebar-button-active");
 
         // Set active
-        activeButton.getStyleClass().add("sidebar-button-active");
+        if (activeButton != null) activeButton.getStyleClass().add("sidebar-button-active");
     }
 }

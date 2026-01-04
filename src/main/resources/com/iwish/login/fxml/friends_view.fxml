@@ -13,32 +13,27 @@
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.FriendsController" styleClass="content-view">
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.FriendsController" styleClass="content-view" stylesheets="@../styles/friends.css">
 
     <top>
-        <VBox spacing="15" styleClass="friends-header">
+        <VBox spacing="20" styleClass="friends-header">
             <padding>
-                <Insets top="10" right="20" bottom="10" left="20"/>
+                <Insets top="20" right="30" bottom="20" left="30"/>
             </padding>
 
-            <!-- Header Title -->
-            <Label text="Friends" styleClass="view-header"/>
+            <!-- Page Title -->
+            <Label text="Friends" styleClass="page-title"/>
 
-            <!-- Tabs Row -->
-            <HBox alignment="CENTER_LEFT" spacing="20">
-                <!-- Tabs -->
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="tab-container">
-                    <ToggleButton fx:id="myFriendsTab" text="My Friends" selected="true" onAction="#showMyFriends" styleClass="tab-button"/>
-                    <ToggleButton fx:id="friendRequestsTab" text="Friend Requests ➌" onAction="#showFriendRequests" styleClass="tab-button"/>
-                    <Label text="Search Users" styleClass="tab-button"/>
-                </HBox>
-
-                <Region HBox.hgrow="ALWAYS"/>
+            <!-- Tab Navigation -->
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <ToggleButton fx:id="myFriendsTab" text="My Friends" selected="true" onAction="#showMyFriends" styleClass="tab-button"/>
+                <ToggleButton fx:id="friendRequestsTab" text="Friend Requests" onAction="#showFriendRequests" styleClass="tab-button"/>
             </HBox>
 
             <!-- Search Bar -->
             <HBox alignment="CENTER_LEFT" spacing="15" maxWidth="600">
-                <TextField fx:id="searchField" promptText="Search" HBox.hgrow="ALWAYS" styleClass="text-input"/>
+                <TextField fx:id="searchField" promptText="Search your friends..." HBox.hgrow="ALWAYS" styleClass="search-input" onKeyReleased="#handleSearchInput" onAction="#handleGlobalSearch"/>
+                <Button fx:id="searchButton" text="Search" styleClass="search-button" onAction="#handleGlobalSearch"/>
             </HBox>
         </VBox>
     </top>
@@ -46,20 +41,27 @@
     <center>
         <StackPane>
             <padding>
-                <Insets top="10" right="20" bottom="20" left="20"/>
+                <Insets top="10" right="30" bottom="30" left="30"/>
             </padding>
 
-            <!-- My Friends View (List) -->
-            <VBox fx:id="myFriendsView" visible="true" spacing="15">
+            <!-- My Friends View -->
+            <VBox fx:id="myFriendsView" visible="true" managed="true" spacing="15">
                 <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll" VBox.vgrow="ALWAYS">
                     <VBox fx:id="friendsList" spacing="15" styleClass="friends-list-container"/>
                 </ScrollPane>
             </VBox>
 
             <!-- Friend Requests View -->
-            <VBox fx:id="friendRequestsView" visible="false" spacing="15">
+            <VBox fx:id="friendRequestsView" visible="false" managed="false" spacing="15">
                 <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll" VBox.vgrow="ALWAYS">
                     <VBox fx:id="requestsList" spacing="15" styleClass="friends-list-container"/>
+                </ScrollPane>
+            </VBox>
+
+            <!-- Search Results View (for adding friends) -->
+            <VBox fx:id="searchResultsView" visible="false" managed="false" spacing="15">
+                <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="content-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="searchResultsList" spacing="15" styleClass="friends-list-container"/>
                 </ScrollPane>
             </VBox>
         </StackPane>

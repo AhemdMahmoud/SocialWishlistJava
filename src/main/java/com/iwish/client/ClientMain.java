@@ -12,13 +12,11 @@ public class ClientMain extends Application {
     public void start(Stage primaryStage) throws Exception {
         // Load Login View
         Parent root = FXMLLoader.load(getClass().getResource("/com/iwish/login/fxml/login_view.fxml"));
-
-        Scene scene = new Scene(root, 1024, 768);
-        scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/login.css").toExternalForm());
-
         primaryStage.setTitle("i-Wish - Login");
+        // Loading login css if needed, usually done in FXML or here
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/login.css").toExternalForm());
         primaryStage.setScene(scene);
-        primaryStage.centerOnScreen();
         primaryStage.show();
     }
 
