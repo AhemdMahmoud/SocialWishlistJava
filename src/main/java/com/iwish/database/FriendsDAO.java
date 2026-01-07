@@ -235,4 +235,70 @@ public class FriendsDAO {
         }
         return users;
     }
+    public static class FriendshipDetails {
+        private int requesterId;
+        private String requesterUsername;
+        private int targetId;
+        private String targetUsername;
+
+        public int getRequesterId() {
+            return requesterId;
+        }
+
+        public void setRequesterId(int requesterId) {
+            this.requesterId = requesterId;
+        }
+
+        public String getRequesterUsername() {
+            return requesterUsername;
+        }
+
+        public void setRequesterUsername(String requesterUsername) {
+            this.requesterUsername = requesterUsername;
+        }
+
+        public int getTargetId() {
+            return targetId;
+        }
+
+        public void setTargetId(int targetId) {
+            this.targetId = targetId;
+        }
+
+        public String getTargetUsername() {
+            return targetUsername;
+        }
+
+        public void setTargetUsername(String targetUsername) {
+            this.targetUsername = targetUsername;
+        }
+    }
+
+    public FriendshipDetails getFriendshipDetails(int friendshipId) {
+        String sql = "SELECT f.user_id, f.friend_id, u1.username AS requester_username, u2.username AS target_username " +
+                "FROM FRIENDS f " +
+                "JOIN USERS u1 ON f.user_id = u1.user_id " +
+                "JOIN USERS u2 ON f.friend_id = u2.user_id " +
+                "WHERE f.friendship_id = ?";
+
+        try (Connection conn = dbManager.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, friendshipId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                FriendshipDetails details = new FriendshipDetails();
+                details.setRequesterId(rs.getInt("user_id"));
+                details.setTargetId(rs.getInt("friend_id"));
+                details.setRequesterUsername(rs.getString("requester_username"));
+                details.setTargetUsername(rs.getString("target_username"));
+                return details;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

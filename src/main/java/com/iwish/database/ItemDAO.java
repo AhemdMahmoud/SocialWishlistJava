@@ -71,10 +71,13 @@ public class ItemDAO {
      */
     public List<Item> getUserWishlist(int userId) {
         List<Item> items = new ArrayList<>();
-        String sql = "SELECT w.item_id, w.item_name, w.item_price, w.description, w.img_src, uw.created_date " +
+        String sql = "SELECT w.item_id, w.item_name, w.item_price, w.description, w.img_src, " +
+                "uw.created_date, uw.wish_id, COALESCE(SUM(c.amount), 0) AS funded " +
                 "FROM WISHLIST w " +
                 "JOIN USERWISHES uw ON w.item_id = uw.item_id " +
+                "LEFT JOIN CONTRIBUTIONS c ON uw.wish_id = c.wish_id " +
                 "WHERE uw.user_id = ? " +
+                "GROUP BY w.item_id, w.item_name, w.item_price, w.description, w.img_src, uw.created_date, uw.wish_id " +
                 "ORDER BY uw.created_date DESC";
 
         try (Connection conn = dbManager.getConnection();
@@ -90,6 +93,7 @@ public class ItemDAO {
                         rs.getDouble("item_price"),
                         rs.getString("img_src"));
                 item.setDescription(rs.getString("description"));
+                item.setFunded(rs.getDouble("funded"));
                 items.add(item);
             }
         } catch (SQLException e) {
@@ -172,5 +176,23 @@ public class ItemDAO {
             e.printStackTrace();
         }
         return 0.0;
+    }
+
+    public int findWishIdForUserItem(int ownerUserId, int itemId) {
+        String sql = "SELECT wish_id FROM USERWISHES WHERE user_id = ? AND item_id = ?";
+        try (Connection conn = dbManager.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, ownerUserId);
+            pstmt.setInt(2, itemId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("wish_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

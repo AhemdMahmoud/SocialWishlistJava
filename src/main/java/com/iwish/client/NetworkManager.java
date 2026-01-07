@@ -157,8 +157,14 @@ public class NetworkManager {
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
                             String imgSrc = itemParts.length >= 4 ? itemParts[3] : "";
+                            double funded = 0.0;
+                            if (itemParts.length >= 5) {
+                                funded = Double.parseDouble(itemParts[4]);
+                            }
 
-                            items.add(new Item(id, name, price, imgSrc));
+                            Item item = new Item(id, name, price, imgSrc);
+                            item.setFunded(funded);
+                            items.add(item);
                         } catch (NumberFormatException e) {
                             System.err.println("Error parsing item: " + itemStr);
                         }
@@ -396,6 +402,74 @@ public class NetworkManager {
                 socket.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean addContribution(int ownerUserId, int itemId, double amount) {
+        try {
+            dos.writeUTF("ADD_CONTRIBUTION##" + currentUserId + "##" + ownerUserId + "##" + itemId + "##" + amount);
+            String response = dis.readUTF();
+            String[] parts = response.split("##");
+            return "SUCCESS".equals(parts[0]);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public java.util.List<com.iwish.models.Notification> getNotifications(int userId) {
+        java.util.List<com.iwish.models.Notification> list = new java.util.ArrayList<>();
+        try {
+            dos.writeUTF("GET_NOTIFICATIONS##" + userId);
+            String response = dis.readUTF();
+            String[] parts = response.split("##");
+            if (!"SUCCESS".equals(parts[0])) {
+                return list;
+            }
+
+            for (int i = 2; i < parts.length; i++) {
+                String entry = parts[i];
+                String[] nParts = entry.split(":");
+                if (nParts.length < 5) {
+                    continue;
+                }
+
+                try {
+                    int id = Integer.parseInt(nParts[0]);
+                    String type = nParts[1];
+                    String message = nParts[2];
+                    int isRead = Integer.parseInt(nParts[3]);
+                    long time = Long.parseLong(nParts[4]);
+
+                    com.iwish.models.Notification n = new com.iwish.models.Notification();
+                    n.setNotificationId(id);
+                    n.setUserId(userId);
+                    n.setType(type.isEmpty() ? null : type);
+                    n.setMessage(message);
+                    n.setRead(isRead == 1);
+                    if (time > 0) {
+                        n.setNotificationDate(new java.sql.Timestamp(time));
+                    }
+
+                    list.add(n);
+                } catch (NumberFormatException e) {
+                    // ignore invalid entry
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public boolean markNotificationRead(int notificationId) {
+        try {
+            dos.writeUTF("MARK_NOTIFICATION_READ##" + notificationId);
+            String response = dis.readUTF();
+            return "SUCCESS".equals(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }

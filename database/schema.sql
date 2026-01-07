@@ -57,7 +57,9 @@ CREATE TABLE Contributions (
 CREATE TABLE Notifications (
     notification_id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),
     user_id INT NOT NULL,
+    type VARCHAR(50),
     message VARCHAR(500) NOT NULL,
+    related_id INT,
     is_read SMALLINT DEFAULT 0,
     notification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE

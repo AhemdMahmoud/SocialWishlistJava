@@ -6,6 +6,7 @@ public class Item {
     private double price;
     private String description;
     private String imgSrc;
+    private double funded;
 
     public Item() {
     }
@@ -64,6 +65,14 @@ public class Item {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public double getFunded() {
+        return funded;
+    }
+
+    public void setFunded(double funded) {
+        this.funded = funded;
     }
 
     @Override
