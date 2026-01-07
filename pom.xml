@@ -52,6 +52,11 @@
             <artifactId>derbyshared</artifactId>
             <version>10.15.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derbynet</artifactId>
+            <version>10.15.2.0</version>
+        </dependency>
 
         <!-- HikariCP Connection Pooling -->
         <dependency>

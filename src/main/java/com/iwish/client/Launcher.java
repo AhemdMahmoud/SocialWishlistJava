@@ -6,6 +6,7 @@ package com.iwish.client;
  */
 public class Launcher {
     public static void main(String[] args) {
+        System.out.println("!!! VERSION CHECK: TILEPANE FIX APPLIED !!!");
         ClientMain.main(args);
     }
 }

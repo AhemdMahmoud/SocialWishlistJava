@@ -119,7 +119,16 @@ public class NetworkManager {
                             int id = Integer.parseInt(itemParts[0]);
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
-                            String imgSrc = itemParts.length >= 4 ? itemParts[3] : "";
+                            
+                            // Reconstruct URL (it may contain colons)
+                            StringBuilder imgSrcBuilder = new StringBuilder();
+                            for (int k = 3; k < itemParts.length; k++) {
+                                imgSrcBuilder.append(itemParts[k]);
+                                if (k < itemParts.length - 1) {
+                                    imgSrcBuilder.append(":");
+                                }
+                            }
+                            String imgSrc = imgSrcBuilder.toString();
 
                             items.add(new Item(id, name, price, imgSrc));
                         } catch (NumberFormatException e) {
@@ -156,10 +165,40 @@ public class NetworkManager {
                             int id = Integer.parseInt(itemParts[0]);
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
-                            String imgSrc = itemParts.length >= 4 ? itemParts[3] : "";
+                            
+                            // Handling for URL and Funded amount
+                            // Format: id:name:price:url:parts:funded
+                            // funded is always the last part if present and length > 4 (assuming normal item has 4 parts min usually)
+                            // But wait, getAllItems format was id:name:price:url
+                            // getUserWishlist sends funded at the end.
+                            
                             double funded = 0.0;
+                            String imgSrc = "";
+                            
                             if (itemParts.length >= 5) {
-                                funded = Double.parseDouble(itemParts[4]);
+                                // Try to parse the last part as funded amount
+                                try {
+                                    funded = Double.parseDouble(itemParts[itemParts.length - 1]);
+                                    // URL is everything from index 3 to length-2
+                                    StringBuilder sb = new StringBuilder();
+                                    for (int k = 3; k < itemParts.length - 1; k++) {
+                                        sb.append(itemParts[k]);
+                                        if (k < itemParts.length - 2) {
+                                            sb.append(":");
+                                        }
+                                    }
+                                    imgSrc = sb.toString();
+                                } catch (NumberFormatException e) {
+                                    // Maybe last part isn't funded? e.g. URL ending in number? 
+                                    // Safer protocol would be better, but assuming server sends funded as double.
+                                    // Fallback: treat as URL if parse fails (unlikely for getUserWishlist which expects funded)
+                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
+                                }
+                            } else if (itemParts.length >= 4) {
+                                // Just URL, no funded? Or empty URL?
+                                // If length is 4, it is id:name:price:urlPart OR id:name:price:funded?
+                                // Assuming standard format includes URL.
+                                imgSrc = itemParts[3];
                             }
 
                             Item item = new Item(id, name, price, imgSrc);

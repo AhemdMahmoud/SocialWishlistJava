@@ -8,6 +8,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.net.InetAddress;
+import java.io.PrintWriter;
+import org.apache.derby.drda.NetworkServerControl;
 
 /**
  * Handles initialization of the Database.
@@ -17,13 +20,15 @@ import java.sql.Statement;
 public class DatabaseManager {
     // HikariCP DataSource
     private static com.zaxxer.hikari.HikariDataSource dataSource;
+    private static NetworkServerControl serverControl;
 
     // Database configuration - Network Derby Server
-    private static final String DB_URL = "jdbc:derby://localhost:1527/iwishdb";
+    private static final String DB_URL = "jdbc:derby://localhost:1527/iwishdb;create=true";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
 
     public boolean connect() {
+        startNetworkServer();
         try {
             if (dataSource == null || dataSource.isClosed()) {
                 com.zaxxer.hikari.HikariConfig config = new com.zaxxer.hikari.HikariConfig();
@@ -44,9 +49,10 @@ public class DatabaseManager {
             // Test connection
             try (Connection conn = dataSource.getConnection()) {
                 if (!tablesExist(conn)) {
-                    System.out.println("Tables not found. Please run migration script first!");
-                    System.out.println("See: database/MIGRATION_TO_NETWORK_DERBY.sql");
-                    return false;
+                    System.out.println("Tables not found. Initializing database...");
+                    initializeDatabase(conn);
+                } else {
+                    checkAndSeedData(conn);
                 }
                 return true;
             }
@@ -67,6 +73,48 @@ public class DatabaseManager {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
             System.out.println("Database pool closed.");
+        }
+        if (serverControl != null) {
+            try {
+                serverControl.shutdown();
+                System.out.println("Derby Network Server stopped.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void startNetworkServer() {
+        try {
+            InetAddress host = InetAddress.getByName("localhost");
+            serverControl = new NetworkServerControl(host, 1527);
+            
+            // Checks if already running
+            try {
+                serverControl.ping();
+                System.out.println("Derby Network Server is already running.");
+                return;
+            } catch (Exception e) {
+                // Not running, so start it
+            }
+
+            serverControl.start(new PrintWriter(System.out, true));
+            System.out.println("Derby Network Server started on localhost:1527");
+
+            // Wait for server to start
+            int retries = 0;
+            while (retries < 10) {
+                try {
+                    Thread.sleep(500);
+                    serverControl.ping();
+                    break;
+                } catch (Exception e) {
+                    retries++;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to start Derby Network Server: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -134,5 +182,71 @@ public class DatabaseManager {
             }
         }
         return -1; // Login failed
+    }
+    private void initializeDatabase(Connection conn) {
+        // ... (existing implementation)
+        runScript(conn, new File("database/schema.sql"));
+        System.out.println("Database tables created. Checking for seed data...");
+        checkAndSeedData(conn);
+    }
+
+    private void checkAndSeedData(Connection conn) {
+        try (Statement stmt = conn.createStatement();
+             java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM WISHLIST")) {
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                // If we have stale data (e.g., just the initial 6 items), we wipe and re-seed
+                if (count < 10) { 
+                    System.out.println("Detected partial/stale data (Count: " + count + "). Re-seeding database...");
+                    try {
+                        stmt.executeUpdate("DELETE FROM WISHLIST"); // Clear old data
+                        // Reset identity if supported by Derby, or just accept gaps. 
+                        // Derby doesn't easily reset identity without procedure call, simple delete is fine.
+                    } catch (SQLException e) {
+                        System.err.println("Warning: Failed to clear table, but attempting seed anyway: " + e.getMessage());
+                    }
+                    runScript(conn, new File("database/seed_data.sql"));
+                } else {
+                    System.out.println("Wishlist data verified (Count: " + count + "). Skipping seed.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void runScript(Connection conn, File scriptFile) {
+        if (!scriptFile.exists()) {
+             System.out.println("Script file not found at " + scriptFile.getAbsolutePath());
+             return;
+        }
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(scriptFile));
+             Statement stmt = conn.createStatement()) {
+            
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                String trimmed = line.trim();
+                // Skip markdown code blocks if present
+                if (trimmed.startsWith("```")) continue;
+                if (trimmed.isEmpty() || trimmed.startsWith("--")) continue;
+                
+                sb.append(line).append(" ");
+                if (trimmed.endsWith(";")) {
+                    String sql = sb.toString().replace(";", "").trim();
+                    try {
+                        stmt.execute(sql);
+                        System.out.println("Executed: " + sql.substring(0, Math.min(50, sql.length())) + "...");
+                    } catch (SQLException e) {
+                        System.err.println("Error executing: " + sql);
+                    }
+                    sb = new StringBuilder();
+                }
+            }
+            System.out.println("Script execution complete: " + scriptFile.getName());
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
