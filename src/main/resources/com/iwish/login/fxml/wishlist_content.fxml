@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="20.0" styleClass="main-content"
+<VBox spacing="30.0" styleClass="main-content"
     xmlns="http://javafx.com/javafx/17"
     xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.WishlistController" stylesheets="@../styles/wishlist.css">
 
@@ -20,16 +20,16 @@
                 <!-- Add items button could go here -->
             </children>
             <padding>
-                <Insets bottom="10.0" top="10.0" />
+                <Insets bottom="20.0" top="20.0" left="0.0" right="0.0" />
             </padding>
         </HBox>
 
         <!-- Wishlist Items List -->
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
             <content>
-                <VBox fx:id="itemsContainer" spacing="20.0">
+                <VBox fx:id="itemsContainer" spacing="30.0">
                     <padding>
-                        <Insets bottom="20.0" left="10.0" right="10.0" top="10.0" />
+                        <Insets bottom="30.0" left="20.0" right="20.0" top="20.0" />
                     </padding>
                 </VBox>
             </content>
