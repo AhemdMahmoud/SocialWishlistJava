@@ -68,12 +68,8 @@ public class FriendProfileController {
                     itemsContainer.getChildren().add(empty);
                 } else {
                     for (Item item : wishlist) {
-                        // For demo purposes, randomizing funded amount if not in model
-                        // Assuming Item model might not have 'funded' field properly populated
-                        // matching the legacy UI which hardcoded values.
-                        // We will default to 0 funded for now or random for visual test.
                         double goal = item.getPrice();
-                        double funded = 0; // In real app, this comes from DB
+                        double funded = item.getFunded();
 
                         itemsContainer.getChildren().add(createWishlistItem(item, funded, goal));
                     }
@@ -196,8 +192,14 @@ public class FriendProfileController {
                 double amount = Double.parseDouble(amountStr);
                 if (amount > 0) {
                     System.out.println("Contributing " + amount + " to item " + itemId);
-                    // TODO: Implement network call for payment
-                    rootStackPane.getChildren().remove(modalOverlay);
+                    boolean success = networkManager.addContribution(friendId, itemId, amount);
+                    if (success) {
+                        rootStackPane.getChildren().remove(modalOverlay);
+                        loadWishlist(); // Refresh to show updated progress bar
+                    } else {
+                        remainingLabel.setText("Payment failed. Please try again.");
+                        remainingLabel.setStyle("-fx-text-fill: red;");
+                    }
                 }
             } catch (NumberFormatException ex) {
                 // ignore invalid

@@ -3,14 +3,18 @@ package com.iwish.server;
 import com.iwish.database.DatabaseManager;
 import com.iwish.database.ItemDAO;
 import com.iwish.database.FriendsDAO;
+import com.iwish.database.NotificationDAO;
+import com.iwish.database.ContributionDAO;
 import com.iwish.models.Item;
 import com.iwish.models.Friend;
 import com.iwish.models.FriendRequest;
 import com.iwish.models.User;
+import com.iwish.models.Notification;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.*;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -83,6 +87,15 @@ public class ClientHandler implements Runnable {
                             break;
                         case "SEARCH_USERS":
                             handleSearchUsers(parts);
+                            break;
+                        case "ADD_CONTRIBUTION":
+                            handleAddContribution(parts);
+                            break;
+                        case "GET_NOTIFICATIONS":
+                            handleGetNotifications(parts);
+                            break;
+                        case "MARK_NOTIFICATION_READ":
+                            handleMarkNotificationRead(parts);
                             break;
                         default:
                             dos.writeUTF("ERROR##Unknown Command");
@@ -188,10 +201,6 @@ public class ClientHandler implements Runnable {
 
     // ========== Wishlist Commands ==========
 
-    /**
-     * GET_WISHLIST##userId
-     * Response: SUCCESS##count##id:name:price:img##id:name:price:img##...
-     */
     private void handleGetWishlist(String[] parts) throws IOException {
         if (parts.length < 2) {
             dos.writeUTF("ERROR##Invalid wishlist format");
@@ -208,7 +217,8 @@ public class ClientHandler implements Runnable {
                     .append(item.getId()).append(":")
                     .append(item.getName()).append(":")
                     .append(item.getPrice()).append(":")
-                    .append(item.getImgSrc());
+                    .append(item.getImgSrc() == null ? "" : item.getImgSrc()).append(":")
+                    .append(item.getFunded());
         }
 
         dos.writeUTF(response.toString());
@@ -432,5 +442,128 @@ public class ClientHandler implements Runnable {
 
         dos.writeUTF(response.toString());
         dos.flush();
+    }
+
+    private void handleAddContribution(String[] parts) throws IOException {
+        if (parts.length < 5) {
+            dos.writeUTF("ERROR##Invalid format");
+            return;
+        }
+
+        int contributorId = Integer.parseInt(parts[1]);
+        int ownerId = Integer.parseInt(parts[2]);
+        int itemId = Integer.parseInt(parts[3]);
+        double amount;
+        try {
+            amount = Double.parseDouble(parts[4]);
+        } catch (NumberFormatException e) {
+            dos.writeUTF("ERROR##Invalid amount");
+            return;
+        }
+
+        ItemDAO itemDAO = new ItemDAO(dbManager);
+        int wishId = itemDAO.findWishIdForUserItem(ownerId, itemId);
+        if (wishId == -1) {
+            dos.writeUTF("ERROR##WishNotFound");
+            return;
+        }
+
+        ContributionDAO contributionDAO = new ContributionDAO(dbManager);
+        boolean ok = contributionDAO.addContribution(wishId, contributorId, amount);
+        if (!ok) {
+            dos.writeUTF("ERROR##FailedToAddContribution");
+            return;
+        }
+
+        double newTotal = itemDAO.getTotalContributions(wishId);
+
+        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+
+        String contributorName = "";
+        String itemName = "";
+        double goalPrice = 0.0;
+
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement userStmt = conn.prepareStatement("SELECT username FROM USERS WHERE user_id = ?");
+             PreparedStatement itemStmt = conn.prepareStatement("SELECT w.item_name, w.item_price FROM USERWISHES uw JOIN WISHLIST w ON uw.item_id = w.item_id WHERE uw.wish_id = ?")) {
+
+            userStmt.setInt(1, contributorId);
+            ResultSet rsUser = userStmt.executeQuery();
+            if (rsUser.next()) {
+                contributorName = rsUser.getString("username");
+            }
+
+            itemStmt.setInt(1, wishId);
+            ResultSet rsItem = itemStmt.executeQuery();
+            if (rsItem.next()) {
+                itemName = rsItem.getString("item_name");
+                goalPrice = rsItem.getDouble("item_price");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        String baseMessage = contributorName + " contributed $" + String.format("%.2f", amount) + " to your item " + itemName;
+        notificationDAO.createNotification(ownerId, "CONTRIBUTION", baseMessage, null);
+
+        if (goalPrice > 0) {
+            double previousTotal = newTotal - amount;
+            double halfGoal = goalPrice * 0.5;
+            if (previousTotal < halfGoal && newTotal >= halfGoal) {
+                String msg50 = "Your item " + itemName + " is now 50% funded.";
+                notificationDAO.createNotification(ownerId, "WISHLIST_PROGRESS", msg50, wishId);
+            }
+            if (previousTotal < goalPrice && newTotal >= goalPrice) {
+                String msg100 = "Your item " + itemName + " is fully funded!";
+                notificationDAO.createNotification(ownerId, "WISHLIST_PROGRESS", msg100, wishId);
+            }
+        }
+
+        dos.writeUTF("SUCCESS##" + newTotal);
+    }
+
+    private void handleGetNotifications(String[] parts) throws IOException {
+        if (parts.length < 2) {
+            dos.writeUTF("ERROR##Invalid format");
+            return;
+        }
+
+        int userId = Integer.parseInt(parts[1]);
+        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+        List<Notification> list = notificationDAO.getNotificationsForUser(userId);
+
+        StringBuilder response = new StringBuilder("SUCCESS##" + list.size());
+        for (Notification n : list) {
+            long time = n.getNotificationDate() != null ? n.getNotificationDate().getTime() : 0L;
+            int isRead = n.isRead() ? 1 : 0;
+            String type = n.getType() != null ? n.getType() : "";
+            response.append("##")
+                    .append(n.getNotificationId()).append(":")
+                    .append(type).append(":")
+                    .append(n.getMessage().replace("##", " ").replace(":", "-"))
+                    .append(":")
+                    .append(isRead).append(":")
+                    .append(time);
+        }
+
+        dos.writeUTF(response.toString());
+        dos.flush();
+    }
+
+    private void handleMarkNotificationRead(String[] parts) throws IOException {
+        if (parts.length < 2) {
+            dos.writeUTF("ERROR##Invalid format");
+            return;
+        }
+
+        int notificationId = Integer.parseInt(parts[1]);
+        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+        boolean ok = notificationDAO.markNotificationRead(notificationId);
+
+        if (ok) {
+            dos.writeUTF("SUCCESS");
+        } else {
+            dos.writeUTF("ERROR##FailedToMarkRead");
+        }
     }
 }

@@ -14,6 +14,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import com.iwish.models.Notification;
 
 public class WishlistPage {
 
@@ -147,13 +153,14 @@ public class WishlistPage {
                 Label iconLabel = new Label("🔔");
                 iconLabel.setStyle("-fx-font-size: 24px; -fx-text-fill: white;");
 
-                // Notification badge
+                // Notification badge - will be updated dynamically
                 Circle badge = new Circle(8);
                 badge.setFill(Color.web("#e74c3c"));
                 badge.setStroke(Color.WHITE);
                 badge.setStrokeWidth(2);
+                badge.setVisible(false); // Initially hidden
 
-                Label badgeLabel = new Label("3");
+                Label badgeLabel = new Label();
                 badgeLabel.setStyle("-fx-font-size: 10px; -fx-font-weight: bold; -fx-text-fill: white;");
 
                 StackPane badgeContainer = new StackPane(badge, badgeLabel);
@@ -170,9 +177,47 @@ public class WishlistPage {
 
                 btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #1565C0; -fx-background-radius: 5;"));
                 btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent;"));
-                btn.setOnMouseClicked(e -> System.out.println("Notifications clicked"));
+                
+                // Add click handler to show notifications
+                btn.setOnMouseClicked(e -> {
+                    try {
+                        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/iwish/client/notifications_view.fxml"));
+                        javafx.scene.Parent root = loader.load();
+                        Stage stage = (Stage) btn.getScene().getWindow();
+                        stage.setScene(new Scene(root));
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                });
+
+                // Load notifications count
+                loadNotificationCount(badge, badgeLabel);
 
                 return btn;
+        }
+        
+        private void loadNotificationCount(Circle badge, Label badgeLabel) {
+            new Thread(() -> {
+                try {
+                    NetworkManager network = NetworkManager.getInstance();
+                    if (network.connect()) {
+                        int userId = network.getCurrentUserId();
+                        List<Notification> notifications = network.getNotifications(userId);
+                        long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
+                        
+                        javafx.application.Platform.runLater(() -> {
+                            if (unreadCount > 0) {
+                                badge.setVisible(true);
+                                badgeLabel.setText(String.valueOf(unreadCount));
+                            } else {
+                                badge.setVisible(false);
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
 
         private VBox createMainContent() {

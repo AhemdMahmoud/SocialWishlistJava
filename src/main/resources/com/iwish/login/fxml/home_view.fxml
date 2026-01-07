@@ -51,6 +51,16 @@
                 </graphic>
             </Button>
 
+            <Button fx:id="notificationsNavButton" contentDisplay="TOP" maxWidth="Infinity" onAction="#handleNotificationsNav" styleClass="sidebar-button" text="Notifications">
+                <graphic>
+                    <StackPane>
+                        <Label style="-fx-font-size: 20px; -fx-text-fill: white;" text="🔔" />
+                        <Label fx:id="notificationsBadgeSidebar" text="" visible="false"
+                               style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 2 5 2 5; -fx-translate-x: 12; -fx-translate-y: -8;" />
+                    </StackPane>
+                </graphic>
+            </Button>
+
             <Region VBox.vgrow="ALWAYS" />
 
             <Button fx:id="logoutButton" contentDisplay="TOP" maxWidth="Infinity" onAction="#handleLogout" text="Logout">
@@ -76,6 +86,10 @@
 
                     <!-- Welcome Message -->
                     <Label fx:id="welcomeLabel" style="-fx-font-size: 14px; -fx-text-fill: #2c3e50;" text="Welcome, User" />
+
+                    <!-- Notifications Badge -->
+                    <Label fx:id="notificationsBadgeLabel" text="" visible="false"
+                           style="-fx-font-size: 12px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;" />
 
                     <!-- Account Icon -->
                     <StackPane style="-fx-cursor: hand; -fx-background-color: #3498db; -fx-background-radius: 20; -fx-pref-width: 40; -fx-pref-height: 40;">

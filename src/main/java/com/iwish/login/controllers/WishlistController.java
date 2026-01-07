@@ -50,12 +50,9 @@ public class WishlistController {
         }
 
         for (Item item : items) {
-            // Stubbing funded/goal for now as Item model might need update or mapped from
-            // separate source logic
-            // Assuming Item has these or we default to 0/Price for now
             double price = item.getPrice();
             double goal = price;
-            double funded = 0; // TODO: fetch actual contribution data
+            double funded = item.getFunded();
 
             HBox row = createWishlistItem(item.getImgSrc(), item.getName(), price, funded, goal, item.getId());
             itemsContainer.getChildren().add(row);
