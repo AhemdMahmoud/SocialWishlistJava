@@ -42,7 +42,11 @@
 
         <!-- Wishlist Items -->
         <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-            <VBox fx:id="itemsContainer" spacing="20" styleClass="items-container"/>
+            <VBox fx:id="itemsContainer" spacing="30" styleClass="items-container">
+                <padding>
+                    <Insets bottom="30.0" left="20.0" right="20.0" top="20.0" />
+                </padding>
+            </VBox>
         </ScrollPane>
 
     </VBox>
