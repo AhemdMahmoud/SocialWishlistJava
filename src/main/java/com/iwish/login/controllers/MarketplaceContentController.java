@@ -116,8 +116,10 @@ public class MarketplaceContentController {
 
         if (imageUrl != null && !imageUrl.isEmpty()) {
             try {
-                // Background loading standard JavaFX
-                Image img = new Image(imageUrl, true); // true = background loading
+                // Background loading via Cache Manager
+                // content controller uses imgWidth = 220
+                com.iwish.client.ImageCacheManager cache = com.iwish.client.ImageCacheManager.getInstance();
+                Image img = cache.getImage(imageUrl, imgWidth);
                 imageView.setImage(img);
 
                 // Show standard placeholder until loaded or if error

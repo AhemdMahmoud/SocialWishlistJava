@@ -79,8 +79,8 @@ public class WishlistController {
             }
 
             if (validUrl != null && !validUrl.isEmpty()) {
-                // Use standard Image (background loading = true)
-                Image img = new Image(validUrl, true);
+                // Use Cache Manager for background loading + disk caching
+                Image img = com.iwish.client.ImageCacheManager.getInstance().getImage(validUrl, 90);
                 ImageView imageView = new ImageView(img);
                 imageView.setFitWidth(90);
                 imageView.setFitHeight(90);
@@ -130,7 +130,8 @@ public class WishlistController {
 
         progressStack.getChildren().addAll(progressBar, progressLabel);
 
-        Label fundingLabel = new Label("E£ " + String.format("%,.0f ", funded) + " of E£ " + String.format("%,.0f ", goal));
+        Label fundingLabel = new Label(
+                "E£ " + String.format("%,.0f ", funded) + " of E£ " + String.format("%,.0f ", goal));
         fundingLabel.getStyleClass().add("funding-label");
 
         progressContainer.getChildren().addAll(progressStack, fundingLabel);
