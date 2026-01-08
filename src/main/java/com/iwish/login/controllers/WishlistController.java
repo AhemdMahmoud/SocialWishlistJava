@@ -79,8 +79,8 @@ public class WishlistController {
             }
 
             if (validUrl != null && !validUrl.isEmpty()) {
-                // Use Cache Manager for background loading + disk caching
-                Image img = com.iwish.client.ImageCacheManager.getInstance().getImage(validUrl, 90);
+                // Use standard Image (background loading = true)
+                Image img = new Image(validUrl, true);
                 ImageView imageView = new ImageView(img);
                 imageView.setFitWidth(90);
                 imageView.setFitHeight(90);
