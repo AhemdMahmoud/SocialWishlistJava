@@ -4,9 +4,6 @@ import javafx.scene.image.Image;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,22 +45,15 @@ public class ImageCacheManager {
             return memoryCache.get(url);
         }
 
-        // 2. Return a placeholder or loading image instantly?
-        // For JavaFX, we can return an Image that loads in background.
-        // But we want to use our disk cache logic.
-
-        // Construct a JavaFX image that loads from a stream (which we manage)
-        // OR: simpler approach for UI responsiveness:
-
-        // Check if file exists in disk cache
-        String fileName = getHash(url) + ".png"; // Simple extension assumption
+        // 2. Check Disk Cache
+        String fileName = getHash(url) + ".png"; 
         File cachedFile = new File(cacheDir, fileName);
 
         if (cachedFile.exists()) {
             try {
-                // Load from disk
                 String fileUri = cachedFile.toURI().toString();
-                Image img = new Image(fileUri, requestedWidth, 0, true, true); // background loading
+                // Load from disk: background=true
+                Image img = new Image(fileUri, requestedWidth, 0, true, true); 
                 memoryCache.put(url, img);
                 return img;
             } catch (Exception e) {
@@ -72,19 +62,9 @@ public class ImageCacheManager {
         }
 
         // 3. Not in cache, download it
-        // We create a "Loading..." placeholder or fire a background task to download
-        // and then update the UI?
-        // The standard JavaFX 'new Image(url, true)' does this automatically but NO
-        // disk cache.
-
-        // HYBRID APPROACH:
-        // Return a standard Image(url, true) (background) for immediate display,
-        // BUT ALSO fire a task to save it to disk for NEXT time.
-        // This is the smoothest UX.
-
         downloadAndCache(url);
 
-        // Return standard background loading image for now
+        // Return standard background loading image for now (so UI shows something/placeholder)
         Image img = new Image(url, requestedWidth, 0, true, true);
         memoryCache.put(url, img);
         return img;
