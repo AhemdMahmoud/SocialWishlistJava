@@ -56,7 +56,7 @@ public class NetworkManager {
      * 
      * @return user_id if successful, -1 if failed
      */
-    public int login(String username, String password) {
+    public synchronized int login(String username, String password) {
         try {
             dos.writeUTF("LOGIN##" + username + "##" + password);
             String response = dis.readUTF();
@@ -78,7 +78,7 @@ public class NetworkManager {
      * 
      * @return user_id if successful, -1 if failed
      */
-    public int register(String username, String password, String email) {
+    public synchronized int register(String username, String password, String email) {
         try {
             dos.writeUTF("REGISTER##" + username + "##" + password + "##" + email);
             String response = dis.readUTF();
@@ -102,7 +102,7 @@ public class NetworkManager {
     /**
      * Get all items from marketplace catalog
      */
-    public List<Item> getAllItems() {
+    public synchronized List<Item> getAllItems() {
         List<Item> items = new ArrayList<>();
         try {
             dos.writeUTF("GET_ITEMS");
@@ -119,7 +119,7 @@ public class NetworkManager {
                             int id = Integer.parseInt(itemParts[0]);
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
-                            
+
                             // Reconstruct URL (it may contain colons)
                             StringBuilder imgSrcBuilder = new StringBuilder();
                             for (int k = 3; k < itemParts.length; k++) {
@@ -148,7 +148,7 @@ public class NetworkManager {
     /**
      * Get user's personal wishlist
      */
-    public List<Item> getUserWishlist(int userId) {
+    public synchronized List<Item> getUserWishlist(int userId) {
         List<Item> items = new ArrayList<>();
         try {
             dos.writeUTF("GET_WISHLIST##" + userId);
@@ -165,16 +165,17 @@ public class NetworkManager {
                             int id = Integer.parseInt(itemParts[0]);
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
-                            
+
                             // Handling for URL and Funded amount
                             // Format: id:name:price:url:parts:funded
-                            // funded is always the last part if present and length > 4 (assuming normal item has 4 parts min usually)
+                            // funded is always the last part if present and length > 4 (assuming normal
+                            // item has 4 parts min usually)
                             // But wait, getAllItems format was id:name:price:url
                             // getUserWishlist sends funded at the end.
-                            
+
                             double funded = 0.0;
                             String imgSrc = "";
-                            
+
                             if (itemParts.length >= 5) {
                                 // Try to parse the last part as funded amount
                                 try {
@@ -189,10 +190,12 @@ public class NetworkManager {
                                     }
                                     imgSrc = sb.toString();
                                 } catch (NumberFormatException e) {
-                                    // Maybe last part isn't funded? e.g. URL ending in number? 
+                                    // Maybe last part isn't funded? e.g. URL ending in number?
                                     // Safer protocol would be better, but assuming server sends funded as double.
-                                    // Fallback: treat as URL if parse fails (unlikely for getUserWishlist which expects funded)
-                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
+                                    // Fallback: treat as URL if parse fails (unlikely for getUserWishlist which
+                                    // expects funded)
+                                    System.err
+                                            .println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
                                 }
                             } else if (itemParts.length >= 4) {
                                 // Just URL, no funded? Or empty URL?
@@ -219,7 +222,7 @@ public class NetworkManager {
     /**
      * Add item from marketplace to user's wishlist
      */
-    public boolean addToWishlist(int userId, int itemId) {
+    public synchronized boolean addToWishlist(int userId, int itemId) {
         try {
             dos.writeUTF("ADD_TO_WISHLIST##" + userId + "##" + itemId);
             String response = dis.readUTF();
@@ -233,7 +236,7 @@ public class NetworkManager {
     /**
      * Remove item from user's wishlist
      */
-    public boolean removeFromWishlist(int userId, int itemId) {
+    public synchronized boolean removeFromWishlist(int userId, int itemId) {
         try {
             dos.writeUTF("REMOVE_FROM_WISHLIST##" + userId + "##" + itemId);
             String response = dis.readUTF();
@@ -251,7 +254,7 @@ public class NetworkManager {
      * 
      * @return List of Friend objects
      */
-    public List<Friend> getFriends(int userId) {
+    public synchronized List<Friend> getFriends(int userId) {
         List<Friend> friends = new ArrayList<>();
         try {
             dos.writeUTF("GET_FRIENDS##" + userId);
@@ -285,7 +288,7 @@ public class NetworkManager {
      * 
      * @return List of FriendRequest objects
      */
-    public List<FriendRequest> getFriendRequests(int userId) {
+    public synchronized List<FriendRequest> getFriendRequests(int userId) {
         List<FriendRequest> requests = new ArrayList<>();
         try {
             dos.writeUTF("GET_FRIEND_REQUESTS##" + userId);
@@ -336,7 +339,7 @@ public class NetworkManager {
     /**
      * Send friend request to user
      */
-    public boolean addFriend(int userId, String friendUsername) {
+    public synchronized boolean addFriend(int userId, String friendUsername) {
         try {
             dos.writeUTF("ADD_FRIEND##" + userId + "##" + friendUsername);
             String response = dis.readUTF();
@@ -350,7 +353,7 @@ public class NetworkManager {
     /**
      * Accept friend request
      */
-    public boolean acceptFriendRequest(int friendshipId) {
+    public synchronized boolean acceptFriendRequest(int friendshipId) {
         try {
             dos.writeUTF("ACCEPT_FRIEND##" + friendshipId);
             String response = dis.readUTF();
@@ -364,7 +367,7 @@ public class NetworkManager {
     /**
      * Decline friend request
      */
-    public boolean declineFriendRequest(int friendshipId) {
+    public synchronized boolean declineFriendRequest(int friendshipId) {
         try {
             dos.writeUTF("DECLINE_FRIEND##" + friendshipId);
             String response = dis.readUTF();
@@ -378,7 +381,7 @@ public class NetworkManager {
     /**
      * Remove existing friend
      */
-    public boolean removeFriend(int userId, int friendId) {
+    public synchronized boolean removeFriend(int userId, int friendId) {
         try {
             dos.writeUTF("REMOVE_FRIEND##" + userId + "##" + friendId);
             String response = dis.readUTF();
@@ -392,8 +395,15 @@ public class NetworkManager {
     /**
      * Search for users by username
      */
-    public List<User> searchUsers(String query) {
+    /**
+     * Search for users by username
+     */
+    public synchronized List<User> searchUsers(String query) {
         List<User> users = new ArrayList<>();
+        // Ensure query is not empty to avoid split issues on server
+        if (query == null || query.isEmpty()) {
+            query = " ";
+        }
         try {
             dos.writeUTF("SEARCH_USERS##" + query);
             String response = dis.readUTF();
@@ -444,7 +454,7 @@ public class NetworkManager {
         }
     }
 
-    public boolean addContribution(int ownerUserId, int itemId, double amount) {
+    public synchronized boolean addContribution(int ownerUserId, int itemId, double amount) {
         try {
             dos.writeUTF("ADD_CONTRIBUTION##" + currentUserId + "##" + ownerUserId + "##" + itemId + "##" + amount);
             String response = dis.readUTF();
@@ -456,7 +466,7 @@ public class NetworkManager {
         }
     }
 
-    public java.util.List<com.iwish.models.Notification> getNotifications(int userId) {
+    public synchronized java.util.List<com.iwish.models.Notification> getNotifications(int userId) {
         java.util.List<com.iwish.models.Notification> list = new java.util.ArrayList<>();
         try {
             dos.writeUTF("GET_NOTIFICATIONS##" + userId);
@@ -501,7 +511,7 @@ public class NetworkManager {
         return list;
     }
 
-    public boolean markNotificationRead(int notificationId) {
+    public synchronized boolean markNotificationRead(int notificationId) {
         try {
             dos.writeUTF("MARK_NOTIFICATION_READ##" + notificationId);
             String response = dis.readUTF();

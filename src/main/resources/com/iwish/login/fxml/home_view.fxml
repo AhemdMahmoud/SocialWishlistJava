@@ -12,7 +12,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="768" prefWidth="1024" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.HomeController">
+<BorderPane prefHeight="768" prefWidth="1024"
+    xmlns="http://javafx.com/javafx/17.0.1"
+    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.login.controllers.HomeController">
 
     <!-- Left Sidebar (Blue) -->
     <left>
@@ -47,7 +49,10 @@
 
             <Button fx:id="friendsNavButton" contentDisplay="TOP" maxWidth="Infinity" onAction="#handleFriendsNav" styleClass="sidebar-button" text="Friends">
                 <graphic>
-                    <Label style="-fx-font-size: 20px; -fx-text-fill: white;" text="👥" />
+                    <StackPane>
+                        <Label style="-fx-font-size: 20px; -fx-text-fill: white;" text="👥" />
+                        <Label fx:id="friendsBadgeSidebar" style="-fx-background-color: #e74c3c; -fx-background-radius: 5; -fx-min-width: 10; -fx-min-height: 10; -fx-max-width: 10; -fx-max-height: 10; -fx-translate-x: 10; -fx-translate-y: -8;" visible="false" />
+                    </StackPane>
                 </graphic>
             </Button>
 
@@ -55,8 +60,7 @@
                 <graphic>
                     <StackPane>
                         <Label style="-fx-font-size: 20px; -fx-text-fill: white;" text="🔔" />
-                        <Label fx:id="notificationsBadgeSidebar" text="" visible="false"
-                               style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 2 5 2 5; -fx-translate-x: 12; -fx-translate-y: -8;" />
+                        <Label fx:id="notificationsBadgeSidebar" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 10px; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 2 5 2 5; -fx-translate-x: 12; -fx-translate-y: -8;" text="" visible="false" />
                     </StackPane>
                 </graphic>
             </Button>
@@ -87,9 +91,9 @@
                     <!-- Welcome Message -->
                     <Label fx:id="welcomeLabel" style="-fx-font-size: 14px; -fx-text-fill: #2c3e50;" text="Welcome, User" />
 
-                    <!-- Notifications Badge -->
-                    <Label fx:id="notificationsBadgeLabel" text="" visible="false"
-                           style="-fx-font-size: 12px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;" />
+                    <!-- Notifications Badge REMOVED -->
+
+                    <!-- Account Icon -->
 
                     <!-- Account Icon -->
                     <StackPane style="-fx-cursor: hand; -fx-background-color: #3498db; -fx-background-radius: 20; -fx-pref-width: 40; -fx-pref-height: 40;">

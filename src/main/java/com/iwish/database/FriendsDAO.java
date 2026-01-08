@@ -30,7 +30,8 @@ public class FriendsDAO {
                 "JOIN FRIENDS f ON (u.user_id = f.friend_id OR u.user_id = f.user_id) " +
                 "WHERE (f.user_id = ? OR f.friend_id = ?) " +
                 "AND f.status = 'accepted' " +
-                "AND u.user_id != ?";
+                "AND u.user_id != ? " +
+                "ORDER BY f.friendship_id DESC";
 
         try (Connection conn = dbManager.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -212,8 +213,17 @@ public class FriendsDAO {
         // Use standard SQL for Derby (case insensitive match)
         String sql = "SELECT user_id, username, email FROM USERS " +
                 "WHERE LOWER(username) LIKE LOWER(?) " +
-                "ORDER BY username " +
-                "FETCH FIRST 20 ROWS ONLY"; // Derby syntax for LIMIT
+                "ORDER BY username";
+
+        // Only limit if it's a specific search, otherwise (empty query) return all (or
+        // large limit) for client-side filtering
+        if (!query.trim().isEmpty()) {
+            sql += " FETCH FIRST 20 ROWS ONLY";
+        } else {
+            // Use a larger safe limit for "all users" view, or no limit if explicitly
+            // requested "whole users"
+            sql += " FETCH FIRST 1000 ROWS ONLY";
+        }
 
         try (Connection conn = dbManager.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -235,6 +245,7 @@ public class FriendsDAO {
         }
         return users;
     }
+
     public static class FriendshipDetails {
         private int requesterId;
         private String requesterUsername;
@@ -275,7 +286,8 @@ public class FriendsDAO {
     }
 
     public FriendshipDetails getFriendshipDetails(int friendshipId) {
-        String sql = "SELECT f.user_id, f.friend_id, u1.username AS requester_username, u2.username AS target_username " +
+        String sql = "SELECT f.user_id, f.friend_id, u1.username AS requester_username, u2.username AS target_username "
+                +
                 "FROM FRIENDS f " +
                 "JOIN USERS u1 ON f.user_id = u1.user_id " +
                 "JOIN USERS u2 ON f.friend_id = u2.user_id " +

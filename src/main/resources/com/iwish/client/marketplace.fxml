@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.Circle?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="900.0" prefWidth="1500.0" stylesheets="@marketplace.css"
-   xmlns="http://javafx.com/javafx/25"
+   xmlns="http://javafx.com/javafx/17.0.1"
    xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.iwish.client.MarketplaceController">
 
    <!-- Left Sidebar -->
@@ -115,19 +115,15 @@
             </HBox>
 
             <!-- Items Grid -->
-           <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
-   <content>
-      <javafx.scene.layout.TilePane fx:id="itemsContainer" 
-            hgap="25.0" vgap="25.0" 
-            prefTileWidth="220.0" prefTileHeight="320.0" 
-            alignment="TOP_LEFT"
-            styleClass="tile-pane">
-         <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-         </padding>
-      </javafx.scene.layout.TilePane>
-   </content>
-</ScrollPane>
+            <ScrollPane fx:id="scrollPane" fitToWidth="true" hbarPolicy="NEVER" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
+               <content>
+                  <javafx.scene.layout.TilePane fx:id="itemsContainer" hgap="25.0" vgap="25.0" prefTileWidth="220.0" prefTileHeight="320.0" alignment="TOP_LEFT" styleClass="tile-pane">
+                     <padding>
+                        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                     </padding>
+                  </javafx.scene.layout.TilePane>
+               </content>
+            </ScrollPane>
          </children>
       </VBox>
    </center>

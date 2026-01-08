@@ -100,7 +100,8 @@ public class LoginController {
         int userId = NetworkManager.getInstance().register(username, password, email);
         if (userId != -1) {
             System.out.println("Registration successful! User ID: " + userId);
-            navigateToHome();
+            showLogin();
+            showSuccess(loginMessageLabel, "User registered successfully, you can login now");
         } else {
             showError(registerMessageLabel, "Registration failed");
         }
@@ -113,20 +114,7 @@ public class LoginController {
 
             Stage stage = (Stage) loginForm.getScene().getWindow();
             Scene scene = new Scene(root, 1024, 768);
-            scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/friends.css").toExternalForm()); // Reusing
-                                                                                                                        // friends
-                                                                                                                        // css
-                                                                                                                        // or
-                                                                                                                        // creates
-                                                                                                                        // generic
-                                                                                                                        // main
-                                                                                                                        // css
-                                                                                                                        // later
-                                                                                                                        // if
-                                                                                                                        // needed
-            // Ideally we should have home.css or styles loaded in FXML.
-            // home_view.fxml does not have stylesheet attached in source, so we might want
-            // to attach one or rely on specific view styles
+            scene.getStylesheets().add(getClass().getResource("/com/iwish/login/styles/friends.css").toExternalForm());
 
             stage.setScene(scene);
             stage.setTitle("i-Wish - Home");
@@ -198,5 +186,12 @@ public class LoginController {
         label.setVisible(true);
         label.setManaged(true);
         label.setStyle("-fx-text-fill: red;");
+    }
+
+    private void showSuccess(Label label, String message) {
+        label.setText(message);
+        label.setVisible(true);
+        label.setManaged(true);
+        label.setStyle("-fx-text-fill: green;");
     }
 }

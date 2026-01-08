@@ -79,7 +79,9 @@ public class WishlistController {
             }
 
             if (validUrl != null && !validUrl.isEmpty()) {
-                ImageView imageView = new ImageView(new Image(validUrl, true));
+                // Use standard Image (background loading = true)
+                Image img = new Image(validUrl, true);
+                ImageView imageView = new ImageView(img);
                 imageView.setFitWidth(90);
                 imageView.setFitHeight(90);
                 imageView.setPreserveRatio(true);
@@ -102,7 +104,7 @@ public class WishlistController {
         nameLabel.getStyleClass().add("item-name");
         nameLabel.setWrapText(true);
 
-        Label priceLabel = new Label("Total price: $" + String.format("%.2f", price));
+        Label priceLabel = new Label("Total price: E£ " + String.format("%,.0f", price));
         priceLabel.getStyleClass().add("item-price-label");
 
         // Progress bar container
@@ -118,17 +120,17 @@ public class WishlistController {
 
         ProgressBar progressBar = new ProgressBar(progress);
         progressBar.setMaxWidth(Double.MAX_VALUE);
-        progressBar.setPrefHeight(20);
-        progressBar.getStyleClass().add("wishlist-progress-bar");
+        progressBar.setPrefHeight(35);
+        progressBar.getStyleClass().add("custom-progress-bar");
 
         Label progressLabel = new Label(progressPercent + "% funded");
-        progressLabel.getStyleClass().add("progress-text");
+        progressLabel.getStyleClass().add("progress-label");
         StackPane.setAlignment(progressLabel, Pos.CENTER_LEFT);
-        progressLabel.setPadding(new Insets(0, 0, 0, 10));
+        progressLabel.setPadding(new Insets(0, 0, 0, 15));
 
         progressStack.getChildren().addAll(progressBar, progressLabel);
 
-        Label fundingLabel = new Label("$" + String.format("%.0f", funded) + " of $" + String.format("%.0f", goal));
+        Label fundingLabel = new Label("E£ " + String.format("%,.0f ", funded) + " of E£ " + String.format("%,.0f ", goal));
         fundingLabel.getStyleClass().add("funding-label");
 
         progressContainer.getChildren().addAll(progressStack, fundingLabel);

@@ -12,3 +12,4 @@ target/
 # Derby Database (Local data should not be committed)
 iwish_db/
 derby.log
+database/mydb_seed.sql

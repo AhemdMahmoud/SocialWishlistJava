@@ -39,7 +39,8 @@ public class HomeController {
     private StackPane contentArea;
 
     private Timer notificationsTimer;
-    // private Parent homeView; // TODO: Implement Home View separate FXML or Keep current logic
+    // private Parent homeView; // TODO: Implement Home View separate FXML or Keep
+    // current logic
 
     @FXML
     public void initialize() {
@@ -48,7 +49,7 @@ public class HomeController {
         if (welcomeLabel != null) {
             welcomeLabel.setText("Welcome, " + nm.getCurrentUsername());
         }
-        
+
         // Default state: Home active
         handleHomeNav();
 
@@ -57,9 +58,12 @@ public class HomeController {
 
     @FXML
     private void handleHomeNav() {
+        // Mark friend notifications as read when leaving Friends view
+        markFriendNotificationsAsRead();
         setActiveButton(homeNavButton);
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/marketplace_content.fxml"));
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/iwish/login/fxml/marketplace_content.fxml"));
             Parent marketplaceView = loader.load();
             contentArea.getChildren().clear();
             contentArea.getChildren().add(marketplaceView);
@@ -71,6 +75,7 @@ public class HomeController {
 
     @FXML
     private void handleWishlistNav() {
+        markFriendNotificationsAsRead();
         setActiveButton(wishlistNavButton);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/wishlist_content.fxml"));
@@ -93,6 +98,10 @@ public class HomeController {
             Parent friendsView = loader.load();
             contentArea.getChildren().clear();
             contentArea.getChildren().add(friendsView);
+
+            // NOTE: We DO NOT mark notifications as read here anymore.
+            // They remain unread so the "New Friends" section persists.
+
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Error loading Friends view: " + e.getMessage());
@@ -102,6 +111,7 @@ public class HomeController {
 
     @FXML
     private void handleNotificationsNav() {
+        markFriendNotificationsAsRead();
         setActiveButton(notificationsNavButton);
 
         try {
@@ -115,7 +125,7 @@ public class HomeController {
             showError("Error loading Notifications View");
         }
     }
-    
+
     private void showError(String message) {
         Label errorLabel = new Label(message);
         errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 16px;");
@@ -128,7 +138,7 @@ public class HomeController {
         try {
             stopNotificationBadgeTimer();
             NetworkManager.getInstance().close();
-            
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/iwish/login/fxml/login_view.fxml"));
             Parent root = loader.load();
 
@@ -144,12 +154,17 @@ public class HomeController {
     }
 
     private void setActiveButton(Button activeButton) {
-        if (homeNavButton != null) homeNavButton.getStyleClass().remove("sidebar-button-active");
-        if (wishlistNavButton != null) wishlistNavButton.getStyleClass().remove("sidebar-button-active");
-        if (friendsNavButton != null) friendsNavButton.getStyleClass().remove("sidebar-button-active");
-        if (notificationsNavButton != null) notificationsNavButton.getStyleClass().remove("sidebar-button-active");
+        if (homeNavButton != null)
+            homeNavButton.getStyleClass().remove("sidebar-button-active");
+        if (wishlistNavButton != null)
+            wishlistNavButton.getStyleClass().remove("sidebar-button-active");
+        if (friendsNavButton != null)
+            friendsNavButton.getStyleClass().remove("sidebar-button-active");
+        if (notificationsNavButton != null)
+            notificationsNavButton.getStyleClass().remove("sidebar-button-active");
 
-        if (activeButton != null) activeButton.getStyleClass().add("sidebar-button-active");
+        if (activeButton != null)
+            activeButton.getStyleClass().add("sidebar-button-active");
     }
 
     private void startNotificationBadgeTimer() {
@@ -172,16 +187,39 @@ public class HomeController {
         }
     }
 
+    @FXML
+    private Label friendsBadgeSidebar;
+
+    // ... existing fields ...
+
     private void refreshNotificationBadge() {
         NetworkManager nm = NetworkManager.getInstance();
         if (!nm.isConnected()) {
             return;
         }
         int userId = nm.getCurrentUserId();
+
+        // 1. Check for Pending Friend Requests
+        java.util.List<com.iwish.models.FriendRequest> requests = nm.getFriendRequests(userId);
+        boolean hasPendingRequests = !requests.isEmpty();
+
+        // 2. Check for "Accepted" notifications (Your request to X was accepted)
         java.util.List<com.iwish.models.Notification> list = nm.getNotifications(userId);
-        long unread = list.stream().filter(n -> !n.isRead()).count();
+
+        // Filter out "Accepted" notifications from the general count
+        // User requested: "no need for notification regard ccepted friend request ...
+        // on notification button"
+        long unread = list.stream()
+                .filter(n -> !n.isRead())
+                .filter(n -> n.getMessage() == null || !n.getMessage().toLowerCase().contains("accepted"))
+                .count();
+
+        boolean hasAcceptedNotifications = list.stream()
+                .anyMatch(n -> !n.isRead() && n.getMessage() != null
+                        && n.getMessage().toLowerCase().contains("accepted"));
+
         Platform.runLater(() -> {
-            // Update header badge
+            // Update General Notifications Header Badge
             if (notificationsBadgeLabel != null) {
                 if (unread > 0) {
                     notificationsBadgeLabel.setText(String.valueOf(unread));
@@ -191,7 +229,7 @@ public class HomeController {
                     notificationsBadgeLabel.setVisible(false);
                 }
             }
-            // Update sidebar badge
+            // Update Sidebar Notifications Badge
             if (notificationsBadgeSidebar != null) {
                 if (unread > 0) {
                     notificationsBadgeSidebar.setText(String.valueOf(unread));
@@ -201,6 +239,36 @@ public class HomeController {
                     notificationsBadgeSidebar.setVisible(false);
                 }
             }
+
+            // Update Friends Sidebar Badge (Red Dot)
+            if (friendsBadgeSidebar != null) {
+                if (hasPendingRequests || hasAcceptedNotifications) {
+                    friendsBadgeSidebar.setVisible(true);
+                } else {
+                    friendsBadgeSidebar.setVisible(false);
+                }
+            }
         });
+    }
+
+    private void markFriendNotificationsAsRead() {
+        NetworkManager nm = NetworkManager.getInstance();
+        if (!nm.isConnected())
+            return;
+
+        new Thread(() -> {
+            int userId = nm.getCurrentUserId();
+            java.util.List<com.iwish.models.Notification> list = nm.getNotifications(userId);
+
+            for (com.iwish.models.Notification n : list) {
+                // If notification is about accepted friend request (the condition for the
+                // badge)
+                if (!n.isRead() && n.getMessage() != null && n.getMessage().toLowerCase().contains("accepted")) {
+                    nm.markNotificationRead(n.getNotificationId());
+                }
+            }
+            // Force immediate badge refresh
+            refreshNotificationBadge();
+        }).start();
     }
 }

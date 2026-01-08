@@ -363,9 +363,22 @@ public class ClientHandler implements Runnable {
 
         int friendshipId = Integer.parseInt(parts[1]);
         FriendsDAO friendsDAO = new FriendsDAO(dbManager);
+        // Get details BEFORE accepting (in case status change affects query, though
+        // unlikely)
+        FriendsDAO.FriendshipDetails details = friendsDAO.getFriendshipDetails(friendshipId);
+
         boolean accepted = friendsDAO.acceptFriendRequest(friendshipId);
 
         if (accepted) {
+            // Create Notification for the Requester
+            if (details != null) {
+                NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+                String msg = "User " + details.getTargetUsername() + " accepted your friend request.";
+                // Store accept-er's ID as related ID (useful for checking new friend)
+                notificationDAO.createNotification(details.getRequesterId(), "FRIEND_ACCEPTED", msg,
+                        details.getTargetId());
+            }
+
             dos.writeUTF("SUCCESS");
             System.out.println("Friend request " + friendshipId + " accepted");
         } else {
@@ -484,8 +497,9 @@ public class ClientHandler implements Runnable {
         double goalPrice = 0.0;
 
         try (Connection conn = dbManager.getConnection();
-             PreparedStatement userStmt = conn.prepareStatement("SELECT username FROM USERS WHERE user_id = ?");
-             PreparedStatement itemStmt = conn.prepareStatement("SELECT w.item_name, w.item_price FROM USERWISHES uw JOIN WISHLIST w ON uw.item_id = w.item_id WHERE uw.wish_id = ?")) {
+                PreparedStatement userStmt = conn.prepareStatement("SELECT username FROM USERS WHERE user_id = ?");
+                PreparedStatement itemStmt = conn.prepareStatement(
+                        "SELECT w.item_name, w.item_price FROM USERWISHES uw JOIN WISHLIST w ON uw.item_id = w.item_id WHERE uw.wish_id = ?")) {
 
             userStmt.setInt(1, contributorId);
             ResultSet rsUser = userStmt.executeQuery();
@@ -503,7 +517,8 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
 
-        String baseMessage = contributorName + " contributed $" + String.format("%.2f", amount) + " to your item " + itemName;
+        String baseMessage = contributorName + " contributed $" + String.format("%.2f", amount) + " to your item "
+                + itemName;
         notificationDAO.createNotification(ownerId, "CONTRIBUTION", baseMessage, null);
 
         if (goalPrice > 0) {

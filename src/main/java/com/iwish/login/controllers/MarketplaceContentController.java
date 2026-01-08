@@ -24,7 +24,7 @@ public class MarketplaceContentController {
     @FXML
     private ScrollPane scrollPane;
     // We create this programmatically to ensure it overrides any stale FXML layout
-    private javafx.scene.layout.TilePane itemsContainer; 
+    private javafx.scene.layout.TilePane itemsContainer;
 
     private List<Item> allItems;
 
@@ -34,7 +34,7 @@ public class MarketplaceContentController {
         setupLayout();
         loadItems();
     }
-    
+
     private void setupLayout() {
         itemsContainer = new javafx.scene.layout.TilePane();
         itemsContainer.setHgap(25);
@@ -43,10 +43,10 @@ public class MarketplaceContentController {
         itemsContainer.setPrefTileHeight(320);
         itemsContainer.setAlignment(Pos.TOP_LEFT);
         itemsContainer.setStyle("-fx-padding: 20;");
-        
+
         // Ensure wrapping happens based on available width
-        itemsContainer.setPrefColumns(4); 
-        
+        itemsContainer.setPrefColumns(4);
+
         if (scrollPane != null) {
             scrollPane.setContent(itemsContainer);
             scrollPane.setFitToWidth(true);
@@ -66,14 +66,17 @@ public class MarketplaceContentController {
     }
 
     private void populateGrid() {
-        if (itemsContainer == null) return;
+        if (itemsContainer == null)
+            return;
         itemsContainer.getChildren().clear();
 
-        if (allItems == null) return;
+        if (allItems == null)
+            return;
 
         System.out.println("--- DEBUG: Printing Fetched Items ---");
         for (Item item : allItems) {
-            System.out.println("Item: " + item.getName() + " | Price: " + item.getPrice() + " | Img: " + item.getImgSrc());
+            System.out.println(
+                    "Item: " + item.getName() + " | Price: " + item.getPrice() + " | Img: " + item.getImgSrc());
             VBox card = createItemCard(item);
             itemsContainer.getChildren().add(card);
         }
@@ -84,7 +87,7 @@ public class MarketplaceContentController {
         // Main Card Container
         VBox card = new VBox();
         card.getStyleClass().add("item-card");
-        
+
         // FORCE the card size to match the TilePane slot
         card.setPrefWidth(220);
         card.setPrefHeight(320);
@@ -96,15 +99,15 @@ public class MarketplaceContentController {
         // Load Image
         String imageUrl = item.getImgSrc();
         ImageView imageView = new ImageView();
-        
+
         // Define standard size
         double imgWidth = 220;
         double imgHeight = 160;
-        
+
         imageView.setFitWidth(imgWidth);
         imageView.setFitHeight(imgHeight);
         imageView.setPreserveRatio(false); // Fill the area
-        
+
         // Clip for rounded top corners
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle(imgWidth, imgHeight);
         clip.setArcWidth(20);
@@ -113,10 +116,10 @@ public class MarketplaceContentController {
 
         if (imageUrl != null && !imageUrl.isEmpty()) {
             try {
-                // Background loading
-                Image img = new Image(imageUrl, true); // background loading
+                // Background loading standard JavaFX
+                Image img = new Image(imageUrl, true); // true = background loading
                 imageView.setImage(img);
-                
+
                 // Show standard placeholder until loaded or if error
                 img.errorProperty().addListener((obs, oldV, newV) -> {
                     if (newV) {
@@ -130,7 +133,7 @@ public class MarketplaceContentController {
                 // Exception handling
             }
         }
-        
+
         imageContainer.getChildren().add(imageView);
         imageContainer.setAlignment(Pos.CENTER);
 
@@ -147,7 +150,7 @@ public class MarketplaceContentController {
         nameLabel.setMaxHeight(40); // Limit height
 
         // Price
-        Label priceLabel = new Label(String.format("$%.2f", item.getPrice()));
+        Label priceLabel = new Label(String.format("E£ %,.0f", item.getPrice()));
         priceLabel.getStyleClass().add("item-price");
 
         // Spacer

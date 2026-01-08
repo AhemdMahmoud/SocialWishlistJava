@@ -19,9 +19,7 @@ public class FriendProfileController {
     @FXML
     private StackPane rootStackPane;
     @FXML
-    private Label friendNameLabel;
-    @FXML
-    private Label wishlistTitleLabel;
+    private Label headerTitleLabel;
     @FXML
     private VBox itemsContainer;
 
@@ -39,8 +37,7 @@ public class FriendProfileController {
         this.friendId = friendId;
         this.friendName = friendName;
 
-        friendNameLabel.setText(friendName);
-        wishlistTitleLabel.setText(friendName + "'s Wishlist");
+        headerTitleLabel.setText(friendName + "'s Wishlist");
 
         loadWishlist();
     }
@@ -89,14 +86,23 @@ public class FriendProfileController {
         try {
             Image img = null;
             if (item.getImgSrc() != null && !item.getImgSrc().isEmpty()) {
-                // Try checking if it's a file path
-                File f = new File(item.getImgSrc());
+                String url = item.getImgSrc();
+
+                // 1. Check local file
+                File f = new File(url);
                 if (f.exists()) {
-                    img = new Image(f.toURI().toString());
-                } else {
-                    // Try resource
-                    img = new Image(getClass().getResourceAsStream(item.getImgSrc()));
+                    url = f.toURI().toString();
                 }
+                // 2. Check resource if not http/file
+                else if (!url.startsWith("http") && !url.startsWith("file:")) {
+                    java.net.URL res = getClass().getResource(url);
+                    if (res != null) {
+                        url = res.toExternalForm();
+                    }
+                }
+
+                // Use standard Image (background loading)
+                img = new Image(url, true);
             }
 
             if (img != null && !img.isError()) {
@@ -121,7 +127,7 @@ public class FriendProfileController {
         Label nameLabel = new Label(item.getName());
         nameLabel.getStyleClass().add("item-name");
 
-        Label priceLabel = new Label("Price: $" + String.format("%.2f", item.getPrice()));
+        Label priceLabel = new Label("Price: E£ " + String.format("%,.0f", item.getPrice()));
         priceLabel.getStyleClass().add("item-price");
 
         // Progress
@@ -147,7 +153,7 @@ public class FriendProfileController {
         progressStack.getChildren().addAll(bar, progressLabel);
 
         Label fundingLabel = new Label(
-                "$" + String.format("%.0f", funded) + " of $" + String.format("%.0f", goal));
+                "E£ " + String.format("%,.0f", funded) + " of E£ " + String.format("%,.0f", goal));
         fundingLabel.getStyleClass().add("funding-label");
         fundingLabel.setMinWidth(120);
         fundingLabel.setAlignment(Pos.CENTER_RIGHT);
@@ -181,7 +187,7 @@ public class FriendProfileController {
         amountField.getStyleClass().add("amount-field");
 
         double remaining = Math.max(goal - funded, 0);
-        Label remainingLabel = new Label("Remaining needed: $" + String.format("%.0f", remaining));
+        Label remainingLabel = new Label("Remaining needed: E£ " + String.format("%,.0f", remaining));
         remainingLabel.getStyleClass().add("remaining-label");
 
         Button confirmBtn = new Button("Confirm Payment");

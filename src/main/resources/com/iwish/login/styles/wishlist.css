@@ -84,3 +84,30 @@
 .scroll-pane>.viewport {
     -fx-background-color: transparent;
 }
+
+/* Imported from friend_profile.css for consistent look *
+.custom-progress-bar {
+    -fx-pref-height: 35;
+    -fx-accent: #1976D2;
+    -fx-control-inner-background: #e0e0e0;
+}
+
+.custom-progress-bar .bar {
+    -fx-background-insets: 0;
+    -fx-background-radius: 5;
+    -fx-padding: 0;
+    -fx-background-color: #1976D2;
+}
+
+.custom-progress-bar .track {
+    -fx-background-insets: 0;
+    -fx-background-radius: 5;
+    -fx-padding: 0;
+    -fx-background-color: #e0e0e0;
+}
+
+.progress-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}

@@ -20,25 +20,11 @@
         <!-- Header -->
         <HBox alignment="CENTER_LEFT" spacing="20">
             <Button text="← Back" onAction="#handleBack" styleClass="cancel-button" style="-fx-pref-width: 100; -fx-pref-height: 40; -fx-font-size: 14;"/>
-            <Label text="Friend's Profile" styleClass="page-title"/>
+            <Label fx:id="headerTitleLabel" text="Friend's Wishlist" styleClass="page-title"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <StackPane styleClass="user-icon-container">
-                <Circle radius="20" styleClass="user-icon-circle"/>
-                <Label text="👤" styleClass="user-icon-label"/>
-            </StackPane>
         </HBox>
 
-        <!-- Profile Section -->
-        <HBox spacing="20" alignment="CENTER_LEFT" styleClass="profile-section">
-            <StackPane>
-                <Circle radius="50" styleClass="profile-avatar"/>
-                <Label text="😉" styleClass="profile-avatar-icon"/>
-            </StackPane>
-            <Label fx:id="friendNameLabel" text="Friend Name" styleClass="friend-name-large"/>
-        </HBox>
-
-        <!-- Wishlist Title -->
-        <Label fx:id="wishlistTitleLabel" text="Friend's Wishlist" styleClass="wishlist-title"/>
+        <!-- Wishlist Items Container starts directly here (removed redundant sections) -->
 
         <!-- Wishlist Items -->
         <ScrollPane fitToWidth="true" styleClass="scroll-pane" VBox.vgrow="ALWAYS">
