@@ -101,8 +101,8 @@ public class FriendProfileController {
                     }
                 }
 
-                // Use standard Image (background loading)
-                img = new Image(url, true);
+                // Use ImageCacheManager
+                img = com.iwish.client.ImageCacheManager.getInstance().getImage(url, 90);
             }
 
             if (img != null && !img.isError()) {
