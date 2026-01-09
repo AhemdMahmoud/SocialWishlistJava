@@ -224,3 +224,10 @@
 .logout-button:hover {
     -fx-background-color: rgba(231, 76, 60, 0.3);
 }
+
+/* ========== Status Label ========== */
+
+.status-label {
+    -fx-text-fill: #666;
+    -fx-padding: 5px;
+}

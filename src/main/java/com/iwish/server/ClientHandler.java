@@ -344,6 +344,36 @@ public class ClientHandler implements Runnable {
         boolean sent = friendsDAO.sendFriendRequest(userId, friendUsername);
 
         if (sent) {
+            // Get sender's username for notification message
+            String senderUsername = null;
+            try (Connection conn = dbManager.getConnection();
+                 PreparedStatement pst = conn.prepareStatement("SELECT username FROM Users WHERE user_id = ?")) {
+                pst.setInt(1, userId);
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        senderUsername = rs.getString("username");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            // Get recipient's user ID and send notification
+            try (Connection conn = dbManager.getConnection();
+                 PreparedStatement pst = conn.prepareStatement("SELECT user_id FROM Users WHERE username = ?")) {
+                pst.setString(1, friendUsername);
+                try (ResultSet rs = pst.executeQuery()) {
+                    if (rs.next()) {
+                        int recipientId = rs.getInt("user_id");
+                        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+                        String msg = "User " + senderUsername + " sent you a friend request.";
+                        notificationDAO.createNotification(recipientId, "FRIEND_REQUEST", msg, userId);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
             dos.writeUTF("SUCCESS");
             System.out.println("User " + userId + " sent friend request to " + friendUsername);
         } else {
@@ -481,17 +511,7 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        ContributionDAO contributionDAO = new ContributionDAO(dbManager);
-        boolean ok = contributionDAO.addContribution(wishId, contributorId, amount);
-        if (!ok) {
-            dos.writeUTF("ERROR##FailedToAddContribution");
-            return;
-        }
-
-        double newTotal = itemDAO.getTotalContributions(wishId);
-
-        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
-
+        // Server-side validation: Get goal price and current funding BEFORE adding contribution
         String contributorName = "";
         String itemName = "";
         double goalPrice = 0.0;
@@ -517,6 +537,31 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
 
+        // Validate contribution amount
+        double currentFunded = itemDAO.getTotalContributions(wishId);
+        double remaining = goalPrice - currentFunded;
+
+        if (remaining <= 0) {
+            dos.writeUTF("FAIL##Item already fully funded");
+            return;
+        }
+
+        // Cap the amount to remaining if it exceeds
+        if (amount > remaining) {
+            amount = remaining;
+            System.out.println("Capped contribution to remaining: " + amount);
+        }
+
+        ContributionDAO contributionDAO = new ContributionDAO(dbManager);
+        boolean ok = contributionDAO.addContribution(wishId, contributorId, amount);
+        if (!ok) {
+            dos.writeUTF("ERROR##FailedToAddContribution");
+            return;
+        }
+
+        double newTotal = itemDAO.getTotalContributions(wishId);
+        NotificationDAO notificationDAO = new NotificationDAO(dbManager);
+
         String baseMessage = contributorName + " contributed $" + String.format("%.2f", amount) + " to your item "
                 + itemName;
         notificationDAO.createNotification(ownerId, "CONTRIBUTION", baseMessage, null);
@@ -529,8 +574,25 @@ public class ClientHandler implements Runnable {
                 notificationDAO.createNotification(ownerId, "WISHLIST_PROGRESS", msg50, wishId);
             }
             if (previousTotal < goalPrice && newTotal >= goalPrice) {
+                // Notify owner
                 String msg100 = "Your item " + itemName + " is fully funded!";
                 notificationDAO.createNotification(ownerId, "WISHLIST_PROGRESS", msg100, wishId);
+
+                // Notify all contributors
+                try {
+                    java.util.List<Integer> contributors = contributionDAO.getContributorsForWish(wishId);
+                    for (Integer contributorIdIter : contributors) {
+                        // Don't notify owner twice
+                        if (contributorIdIter != ownerId) {
+                            String msgContributor = "The item " + itemName + " you contributed to is now fully funded!";
+                            notificationDAO.createNotification(contributorIdIter, "CONTRIBUTION_COMPLETE", msgContributor, wishId);
+                        }
+                    }
+                    System.out.println("Notified " + contributors.size() + " contributors about completion");
+                } catch (SQLException e) {
+                    System.err.println("Error notifying contributors: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
 

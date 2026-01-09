@@ -197,6 +197,13 @@ public class FriendProfileController {
             try {
                 double amount = Double.parseDouble(amountStr);
                 if (amount > 0) {
+                    // Client-side validation: check if amount exceeds remaining needed
+                    if (amount > remaining) {
+                        remainingLabel.setText("Amount exceeds remaining needed (E£ " + String.format("%,.0f", remaining) + ")");
+                        remainingLabel.setStyle("-fx-text-fill: red;");
+                        return; // Don't process
+                    }
+
                     System.out.println("Contributing " + amount + " to item " + itemId);
                     boolean success = networkManager.addContribution(friendId, itemId, amount);
                     if (success) {
