@@ -39,7 +39,7 @@ public class MarketplaceContentController {
         loadItems();
         setupSearch();
     }
-    
+
     private void setupSearch() {
         if (searchField != null) {
             // Search on text change
@@ -48,14 +48,15 @@ public class MarketplaceContentController {
             });
         }
     }
-    
+
     private void filterItems(String query) {
-        if (itemsContainer == null || allItems == null) return;
-        
+        if (itemsContainer == null || allItems == null)
+            return;
+
         String lowerQuery = query == null ? "" : query.toLowerCase().trim();
-        
+
         itemsContainer.getChildren().clear();
-        
+
         if (lowerQuery.isEmpty()) {
             // Show all items
             for (Item item : allItems) {
@@ -67,25 +68,25 @@ public class MarketplaceContentController {
             boolean found = false;
             for (Item item : allItems) {
                 boolean matches = false;
-                
+
                 // Check name
                 if (item.getName() != null && item.getName().toLowerCase().contains(lowerQuery)) {
                     matches = true;
                 }
-                
+
                 // Check description
-                if (!matches && item.getDescription() != null && 
-                    item.getDescription().toLowerCase().contains(lowerQuery)) {
+                if (!matches && item.getDescription() != null &&
+                        item.getDescription().toLowerCase().contains(lowerQuery)) {
                     matches = true;
                 }
-                
+
                 if (matches) {
                     VBox card = createItemCard(item);
                     itemsContainer.getChildren().add(card);
                     found = true;
                 }
             }
-            
+
             if (!found) {
                 Label noResults = new Label("No items found matching '" + query + "'");
                 noResults.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 16px; -fx-padding: 20;");
@@ -177,10 +178,10 @@ public class MarketplaceContentController {
 
         // Use image cache for faster loading
         loadedImage = ImageCache.getInstance().getImage(imageUrl);
-        
+
         if (loadedImage != null) {
             imageView.setImage(loadedImage);
-            
+
             // Show placeholder if image has error
             loadedImage.errorProperty().addListener((obs, oldV, newV) -> {
                 if (newV) {
@@ -192,13 +193,13 @@ public class MarketplaceContentController {
                     });
                 }
             });
-            
+
             // Show placeholder while loading
             if (!loadedImage.isBackgroundLoading() || loadedImage.getProgress() < 1.0) {
                 Label loadingLabel = new Label("Loading...");
                 loadingLabel.setStyle("-fx-text-fill: #95a5a6; -fx-font-size: 12px;");
                 imageContainer.getChildren().add(loadingLabel);
-                
+
                 // Remove loading label when image is ready
                 loadedImage.progressProperty().addListener((obs, oldV, newV) -> {
                     if (newV.doubleValue() >= 1.0) {
@@ -217,11 +218,11 @@ public class MarketplaceContentController {
 
         imageContainer.getChildren().add(imageView);
         imageContainer.setAlignment(Pos.CENTER);
-        
+
         // Add click handler to show details
         final Image finalImage = loadedImage;
         imageContainer.setOnMouseClicked(e -> showItemDetails(item, finalImage));
-        
+
         // Add hover effect
         imageContainer.setOnMouseEntered(e -> {
             imageContainer.setStyle("-fx-background-color: rgba(0,0,0,0.1); -fx-background-radius: 10 10 0 0;");
@@ -274,18 +275,19 @@ public class MarketplaceContentController {
             });
         }).start();
     }
-    
+
     private void showItemDetails(Item item, Image image) {
         // Get the scene and find the root BorderPane
         javafx.scene.Scene scene = itemsContainer.getScene();
-        if (scene == null) return;
-        
+        if (scene == null)
+            return;
+
         javafx.scene.Parent root = scene.getRoot();
-        
+
         // Get or create a StackPane container for the modal overlay
         // This ensures the modal covers the entire window including sidebar
         final StackPane finalContainer;
-        
+
         if (root instanceof StackPane) {
             // Already a StackPane, use it
             finalContainer = (StackPane) root;
@@ -296,19 +298,19 @@ public class MarketplaceContentController {
             scene.setRoot(wrapper);
             finalContainer = wrapper;
         }
-        
+
         // Create modal overlay - covers entire window
         StackPane modalOverlay = new StackPane();
         modalOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7);");
         // Make overlay fill entire window
         modalOverlay.setPrefSize(scene.getWidth(), scene.getHeight());
         modalOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        
+
         modalOverlay.setOnMouseClicked(e -> {
             // Close modal when clicking on overlay
             finalContainer.getChildren().remove(modalOverlay);
         });
-        
+
         // Update size when window resizes
         scene.widthProperty().addListener((obs, oldV, newV) -> {
             modalOverlay.setPrefWidth(newV.doubleValue());
@@ -337,10 +339,10 @@ public class MarketplaceContentController {
                 "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;");
         closeBtn.setOnMouseEntered(e -> closeBtn.setStyle(
                 "-fx-background-color: transparent; -fx-text-fill: #333; " +
-                "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
+                        "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
         closeBtn.setOnMouseExited(e -> closeBtn.setStyle(
                 "-fx-background-color: transparent; -fx-text-fill: #999; " +
-                "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
+                        "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
         closeBtn.setOnAction(e -> finalContainer.getChildren().remove(modalOverlay));
 
         // Large image - exactly 500x350px
@@ -390,21 +392,21 @@ public class MarketplaceContentController {
         HBox buttonBox = new HBox(15);
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(20, 0, 0, 0));
-        
+
         Button addBtn = new Button("Add to Wishlist");
         addBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
                 "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
         addBtn.setOnMouseEntered(e -> addBtn.setStyle(
                 "-fx-background-color: #2980b9; -fx-text-fill: white; " +
-                "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+                        "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
         addBtn.setOnMouseExited(e -> addBtn.setStyle(
                 "-fx-background-color: #3498db; -fx-text-fill: white; " +
-                "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+                        "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
         addBtn.setOnAction(e -> {
             handleAddToWishlist(item, addBtn);
             // Don't close modal, just update button
         });
-        
+
         buttonBox.getChildren().add(addBtn);
 
         detailsBox.getChildren().add(nameLabel);
@@ -415,12 +417,12 @@ public class MarketplaceContentController {
 
         headerBox.getChildren().add(closeBtn);
         modalContent.getChildren().addAll(headerBox, imageBox, detailsBox);
-        
+
         modalOverlay.getChildren().add(modalContent);
         StackPane.setAlignment(modalContent, Pos.CENTER);
 
         // Add modal overlay to root container (covers entire window including sidebar)
         finalContainer.getChildren().add(modalOverlay);
     }
-    
+
 }

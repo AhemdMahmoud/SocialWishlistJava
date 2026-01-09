@@ -79,7 +79,8 @@ public class ItemDAO {
                 "JOIN USERWISHES uw ON w.item_id = uw.item_id " +
                 "LEFT JOIN CONTRIBUTIONS c ON uw.wish_id = c.wish_id " +
                 "WHERE uw.user_id = ? " +
-                "GROUP BY w.item_id, w.item_name, w.item_price, w.description, w.img_src, uw.created_date, uw.wish_id " +
+                "GROUP BY w.item_id, w.item_name, w.item_price, w.description, w.img_src, uw.created_date, uw.wish_id "
+                +
                 "ORDER BY uw.created_date DESC";
 
         try (Connection conn = dbManager.getConnection();

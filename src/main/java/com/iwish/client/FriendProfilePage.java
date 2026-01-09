@@ -22,10 +22,17 @@ public class FriendProfilePage {
 
         private Stage stage;
         private String friendName;
+        private int friendId;
+        private VBox itemsContainer;
 
-        public FriendProfilePage(Stage stage, String friendName) {
+        public FriendProfilePage(Stage stage, String friendName, int friendId) {
                 this.stage = stage;
                 this.friendName = friendName;
+                this.friendId = friendId;
+        }
+
+        public FriendProfilePage(Stage stage, String friendName) {
+                this(stage, friendName, -1); // Default/Error case
         }
 
         public Scene createFriendProfileScene() {
@@ -174,17 +181,18 @@ public class FriendProfilePage {
 
                 btn.setOnMouseEntered(e -> btn.setStyle("-fx-background-color: #1565C0; -fx-background-radius: 5;"));
                 btn.setOnMouseExited(e -> btn.setStyle("-fx-background-color: transparent;"));
-                
+
                 // Add click handler to show notifications
                 btn.setOnMouseClicked(e -> {
-                    try {
-                        javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/iwish/client/notifications_view.fxml"));
-                        javafx.scene.Parent root = loader.load();
-                        Stage stage = (Stage) btn.getScene().getWindow();
-                        stage.setScene(new Scene(root));
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
+                        try {
+                                javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                                                getClass().getResource("/com/iwish/client/notifications_view.fxml"));
+                                javafx.scene.Parent root = loader.load();
+                                Stage stage = (Stage) btn.getScene().getWindow();
+                                stage.setScene(new Scene(root));
+                        } catch (IOException ex) {
+                                ex.printStackTrace();
+                        }
                 });
 
                 // Load notifications count
@@ -192,29 +200,29 @@ public class FriendProfilePage {
 
                 return btn;
         }
-        
+
         private void loadNotificationCount(Circle badge, Label badgeLabel) {
-            new Thread(() -> {
-                try {
-                    NetworkManager network = NetworkManager.getInstance();
-                    if (network.connect()) {
-                        int userId = network.getCurrentUserId();
-                        List<Notification> notifications = network.getNotifications(userId);
-                        long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
-                        
-                        Platform.runLater(() -> {
-                            if (unreadCount > 0) {
-                                badge.setVisible(true);
-                                badgeLabel.setText(String.valueOf(unreadCount));
-                            } else {
-                                badge.setVisible(false);
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
+                new Thread(() -> {
+                        try {
+                                NetworkManager network = NetworkManager.getInstance();
+                                if (network.connect()) {
+                                        int userId = network.getCurrentUserId();
+                                        List<Notification> notifications = network.getNotifications(userId);
+                                        long unreadCount = notifications.stream().filter(n -> !n.isRead()).count();
+
+                                        Platform.runLater(() -> {
+                                                if (unreadCount > 0) {
+                                                        badge.setVisible(true);
+                                                        badgeLabel.setText(String.valueOf(unreadCount));
+                                                } else {
+                                                        badge.setVisible(false);
+                                                }
+                                        });
+                                }
+                        } catch (Exception e) {
+                                e.printStackTrace();
+                        }
+                }).start();
         }
 
         private VBox createMainContent() {
@@ -273,22 +281,8 @@ public class FriendProfilePage {
                 wishlistTitle.setPadding(new Insets(10, 0, 10, 0));
 
                 // Wishlist items in scroll pane
-                VBox itemsContainer = new VBox(20);
+                itemsContainer = new VBox(20);
                 itemsContainer.setPadding(new Insets(10));
-
-                itemsContainer.getChildren().addAll(
-                                createFriendWishlistItem(
-                                                "C:\\Users\\11\\Downloads\\SocialWishlistJava\\src\\main\\java\\resources\\images\\51JNhjr4McL._AC_SY300_SX300_QL70_ML2_.jpg",
-                                                "Wireless Headphones", 35.00, 60, 100),
-                                createFriendWishlistItem(
-                                                "C:\\Users\\11\\Downloads\\SocialWishlistJava\\src\\main\\java\\resources\\images\\71FwYuL1FDL._AC_SY300_SX300_QL70_ML2_.jpg",
-                                                "Amazon Smartwatch", 150.00, 100, 150),
-                                createFriendWishlistItem(
-                                                "C:\\Users\\11\\Downloads\\SocialWishlistJava\\src\\main\\java\\resources\\images\\5158rDvSz+L._AC_SY300_SX300_QL70_ML2_.jpg",
-                                                "Wireless Sernyton", 100.00, 60, 100),
-                                createFriendWishlistItem(
-                                                "C:\\Users\\11\\Downloads\\SocialWishlistJava\\src\\main\\java\\resources\\images\\download.jpg",
-                                                "Wireless headphone", 120.00, 40, 120));
 
                 ScrollPane scrollPane = new ScrollPane(itemsContainer);
                 scrollPane.setFitToWidth(true);
@@ -298,11 +292,50 @@ public class FriendProfilePage {
 
                 content.getChildren().addAll(header, profileSection, wishlistTitle, scrollPane);
 
+                loadItems();
+
                 return content;
         }
 
-        private HBox createFriendWishlistItem(String imagePath, String name, double price,
-                        double funded, double goal) {
+        private void loadItems() {
+                if (friendId == -1)
+                        return; // No friend selected
+
+                new Thread(() -> {
+                        try {
+                                NetworkManager network = NetworkManager.getInstance();
+                                if (network.connect()) {
+                                        // Assuming getUserWishlist works for any userId we pass
+                                        // Currently getUserWishlist(id) fetches for that ID
+                                        List<com.iwish.models.Item> items = network.getUserWishlist(friendId);
+                                        Platform.runLater(() -> populateList(items));
+                                }
+                        } catch (Exception e) {
+                                e.printStackTrace();
+                        }
+                }).start();
+        }
+
+        private void populateList(List<com.iwish.models.Item> items) {
+                itemsContainer.getChildren().clear();
+                if (items.isEmpty()) {
+                        Label emptyLabel = new Label("This wishlist is empty.");
+                        emptyLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #7f8c8d;");
+                        itemsContainer.getChildren().add(emptyLabel);
+                } else {
+                        for (com.iwish.models.Item item : items) {
+                                itemsContainer.getChildren().add(createFriendWishlistItem(item));
+                        }
+                }
+        }
+
+        private HBox createFriendWishlistItem(com.iwish.models.Item itemData) {
+                String imagePath = itemData.getImgSrc();
+                String name = itemData.getName();
+                double price = itemData.getPrice();
+                double funded = itemData.getFunded();
+                double goal = price;
+
                 HBox item = new HBox(20);
                 item.setPadding(new Insets(20));
                 item.setAlignment(Pos.CENTER_LEFT);
@@ -317,21 +350,29 @@ public class FriendProfilePage {
                 imageContainer.setMaxSize(100, 100);
 
                 try {
-                        Image productImage = null;
-                        File imgFile = new File(imagePath);
-                        if (imgFile.exists()) {
-                                productImage = new Image(imgFile.toURI().toString());
-                        } else {
-                                productImage = new Image(getClass().getResourceAsStream("/" + imagePath));
+                        if (imagePath != null && !imagePath.isEmpty()) {
+                                Image productImage = null;
+                                File imgFile = new File(imagePath);
+                                if (imgFile.exists()) {
+                                        productImage = new Image(imgFile.toURI().toString());
+                                } else {
+                                        if (imagePath.startsWith("http")) {
+                                                productImage = new Image(imagePath);
+                                        } else {
+                                                productImage = new Image(
+                                                                getClass().getResourceAsStream("/" + imagePath));
+                                        }
+                                }
+
+                                if (productImage != null && !productImage.isError()) {
+                                        ImageView imageView = new ImageView(productImage);
+                                        imageView.setFitWidth(90);
+                                        imageView.setFitHeight(90);
+                                        imageView.setPreserveRatio(true);
+                                        imageView.setSmooth(true);
+                                        imageContainer.getChildren().add(imageView);
+                                }
                         }
-
-                        ImageView imageView = new ImageView(productImage);
-                        imageView.setFitWidth(90);
-                        imageView.setFitHeight(90);
-                        imageView.setPreserveRatio(true);
-                        imageView.setSmooth(true);
-
-                        imageContainer.getChildren().add(imageView);
                 } catch (Exception e) {
                         Label placeholderLabel = new Label("📷");
                         placeholderLabel.setStyle("-fx-font-size: 48px;");
@@ -348,7 +389,7 @@ public class FriendProfilePage {
                 Label priceLabel = new Label("Total price: $" + String.format("%.2f", price));
                 priceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #7f8c8d;");
 
-                double progress = Math.min(funded / goal, 1.0);
+                double progress = (goal > 0) ? Math.min(funded / goal, 1.0) : 0;
                 int progressPercent = (int) (progress * 100);
 
                 // Progress bar container

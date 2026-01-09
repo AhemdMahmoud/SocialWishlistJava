@@ -16,6 +16,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 
 public class MarketplaceController implements Initializable {
@@ -24,9 +25,9 @@ public class MarketplaceController implements Initializable {
     private TextField searchField;
     @FXML
     private ScrollPane scrollPane;
-    
+
     // We create this programmatically to ensure it overrides any stale FXML layout
-    private TilePane itemsContainer; 
+    private TilePane itemsContainer;
 
     private List<Item> allItems;
 
@@ -36,7 +37,7 @@ public class MarketplaceController implements Initializable {
         setupLayout();
         loadItems();
     }
-    
+
     private void setupLayout() {
         itemsContainer = new TilePane();
         itemsContainer.setHgap(25);
@@ -45,16 +46,40 @@ public class MarketplaceController implements Initializable {
         itemsContainer.setPrefTileHeight(320);
         itemsContainer.setAlignment(Pos.TOP_LEFT);
         itemsContainer.setStyle("-fx-padding: 20;");
-        
+
         // Ensure wrapping happens based on available width
-        itemsContainer.setPrefColumns(4); 
-        
+        itemsContainer.setPrefColumns(4);
+
         if (scrollPane != null) {
             scrollPane.setContent(itemsContainer);
             scrollPane.setFitToWidth(true);
         } else {
             System.err.println("ERROR: ScrollPane not injected!");
         }
+    }
+
+    private void handleAddToWishlist(Item item) {
+        System.out.println("Adding to wishlist: " + item.getName());
+        new Thread(() -> {
+            NetworkManager network = NetworkManager.getInstance();
+            if (network.addToWishlist(network.getCurrentUserId(), item.getId())) {
+                Platform.runLater(() -> {
+                    // Do NOT remove from list, allowing multiple adds.
+                    // Just show feedback
+                    System.out.println("Successfully added to wishlist (Multi-add enabled).");
+                    showFeedback("Added to Wishlist!");
+                });
+            } else {
+                Platform.runLater(() -> System.err.println("Failed to add to wishlist."));
+            }
+        }).start();
+    }
+
+    private void showFeedback(String message) {
+        // Simple console feedback or a temporary label overlay could appear here
+        // For now, we trust the console/user flow, strictly meeting the 'do not remove'
+        // requirement
+        System.out.println("FEEDBACK: " + message);
     }
 
     private void loadItems() {
@@ -71,8 +96,9 @@ public class MarketplaceController implements Initializable {
     }
 
     private void populateGrid() {
-        if (itemsContainer == null) return;
-        
+        if (itemsContainer == null)
+            return;
+
         itemsContainer.getChildren().clear();
 
         if (allItems == null)
@@ -87,11 +113,11 @@ public class MarketplaceController implements Initializable {
     private VBox createItemCard(Item item) {
         // Main Card Container
         VBox card = new VBox();
-    card.getStyleClass().add("item-card");
-    
-    // FORCE the card size to match the TilePane slot
-    card.setPrefWidth(220);
-    card.setPrefHeight(320);
+        card.getStyleClass().add("item-card");
+
+        // FORCE the card size to match the TilePane slot
+        card.setPrefWidth(220);
+        card.setPrefHeight(320);
 
         // Image Container
         javafx.scene.layout.StackPane imageContainer = new javafx.scene.layout.StackPane();
@@ -100,15 +126,15 @@ public class MarketplaceController implements Initializable {
         // Load Image
         String imageUrl = item.getImgSrc();
         javafx.scene.image.ImageView imageView = new javafx.scene.image.ImageView();
-        
+
         // Define standard size
         double imgWidth = 220;
         double imgHeight = 160;
-        
+
         imageView.setFitWidth(imgWidth);
         imageView.setFitHeight(imgHeight);
         imageView.setPreserveRatio(false); // Fill the area
-        
+
         // Clip for rounded top corners
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle(imgWidth, imgHeight);
         clip.setArcWidth(20);
@@ -120,7 +146,7 @@ public class MarketplaceController implements Initializable {
                 // Background loading
                 javafx.scene.image.Image img = new javafx.scene.image.Image(imageUrl, true); // background loading
                 imageView.setImage(img);
-                
+
                 // Show standard placeholder until loaded or if error
                 img.errorProperty().addListener((obs, oldV, newV) -> {
                     if (newV) {
@@ -130,12 +156,12 @@ public class MarketplaceController implements Initializable {
                         imageContainer.getChildren().add(imgLabel);
                     }
                 });
-                
+
             } catch (Exception e) {
                 // Exception handling
             }
         }
-        
+
         imageContainer.getChildren().add(imageView);
         imageContainer.setAlignment(Pos.CENTER);
 
@@ -159,32 +185,29 @@ public class MarketplaceController implements Initializable {
         Region spacer = new Region();
         VBox.setVgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        // Button
-        Button wishButton = new Button("Add to Wishlist"); 
+        // Buttons Container
+        HBox actions = new HBox(10);
+        actions.setAlignment(Pos.CENTER);
+
+        // Add to Wishlist Button
+        Button wishButton = new Button("Add to Wishlist");
         wishButton.getStyleClass().add("add-btn");
         wishButton.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(wishButton, javafx.scene.layout.Priority.ALWAYS);
         wishButton.setOnAction(e -> handleAddToWishlist(item));
 
-        content.getChildren().addAll(nameLabel, priceLabel, spacer, wishButton);
+        // Plus Button for multiple adds
+        Button plusButton = new Button("+");
+        plusButton.getStyleClass().add("add-btn"); // Reuse style or add new 'secondary-btn'
+        plusButton.setStyle("-fx-min-width: 40px; -fx-font-weight: bold; -fx-background-color: #2ecc71;");
+        plusButton.setOnAction(e -> handleAddToWishlist(item));
+
+        actions.getChildren().addAll(wishButton, plusButton);
+
+        content.getChildren().addAll(nameLabel, priceLabel, spacer, actions);
         card.getChildren().addAll(imageContainer, content);
 
         return card;
-    }
-
-    private void handleAddToWishlist(Item item) {
-        System.out.println("Added to wishlist: " + item.getName());
-        // TODO: distinct logic for adding to personal wishlist (Server request)
-        // For demonstration, let's assume we want to send this to server
-        // This part would typically be:
-        /*
-        new Thread(() -> {
-            boolean success = NetworkManager.getInstance().addToWishlist(
-                NetworkManager.getInstance().getCurrentUserId(), 
-                item.getId()
-            );
-            // Platform.runLater status update
-        }).start();
-        */
     }
 
     @FXML
@@ -207,7 +230,7 @@ public class MarketplaceController implements Initializable {
     private void handleFriends() {
         try {
             Stage stage = (Stage) itemsContainer.getScene().getWindow(); // changed from gridPane to itemsContainer
-            FriendProfilePage friendPage = new FriendProfilePage(stage, "Ahmed"); // Default friend for now
+            FriendProfilePage friendPage = new FriendProfilePage(stage, "Ahmed", 2); // Default friend for now
             stage.setScene(friendPage.createFriendProfileScene());
         } catch (Exception e) {
             e.printStackTrace();

@@ -193,7 +193,8 @@ public class ClientHandler implements Runnable {
                     .append(item.getName()).append(":")
                     .append(item.getPrice()).append(":")
                     .append(item.getImgSrc() == null ? "" : item.getImgSrc()).append(":")
-                    .append(item.getDescription() == null ? "" : item.getDescription().replace(":", "-").replace("##", " "));
+                    .append(item.getDescription() == null ? ""
+                            : item.getDescription().replace(":", "-").replace("##", " "));
         }
 
         dos.writeUTF(response.toString());
@@ -220,7 +221,8 @@ public class ClientHandler implements Runnable {
                     .append(item.getPrice()).append(":")
                     .append(item.getImgSrc() == null ? "" : item.getImgSrc()).append(":")
                     .append(item.getFunded()).append(":")
-                    .append(item.getDescription() == null ? "" : item.getDescription().replace(":", "-").replace("##", " "));
+                    .append(item.getDescription() == null ? ""
+                            : item.getDescription().replace(":", "-").replace("##", " "));
         }
 
         dos.writeUTF(response.toString());

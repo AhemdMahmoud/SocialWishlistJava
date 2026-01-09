@@ -124,7 +124,7 @@ public class NetworkManager {
                             // URL may contain colons, description is last
                             String imgSrc = "";
                             String description = "";
-                            
+
                             if (itemParts.length >= 5) {
                                 // Has description: id:name:price:url:parts:description
                                 description = itemParts[itemParts.length - 1];
@@ -212,7 +212,8 @@ public class NetworkManager {
                                     }
                                     imgSrc = sb.toString();
                                 } catch (NumberFormatException e) {
-                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 2]);
+                                    System.err
+                                            .println("Error parsing funded amount: " + itemParts[itemParts.length - 2]);
                                 }
                             } else if (itemParts.length >= 5) {
                                 // No description: id:name:price:url:parts:funded
@@ -228,7 +229,8 @@ public class NetworkManager {
                                     }
                                     imgSrc = sb.toString();
                                 } catch (NumberFormatException e) {
-                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
+                                    System.err
+                                            .println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
                                 }
                             } else if (itemParts.length >= 4) {
                                 // Just URL, no funded or description
