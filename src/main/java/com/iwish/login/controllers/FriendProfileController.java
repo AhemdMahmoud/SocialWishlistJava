@@ -2,6 +2,7 @@ package com.iwish.login.controllers;
 
 import com.iwish.client.NetworkManager;
 import com.iwish.models.Item;
+import com.iwish.util.ImageCache;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -10,8 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.Cursor;
 
-import java.io.File;
 import java.util.List;
 
 public class FriendProfileController {
@@ -79,46 +80,49 @@ public class FriendProfileController {
         HBox row = new HBox(20);
         row.getStyleClass().add("wishlist-item-card");
 
-        // Image
+        // Image - make it clickable
         StackPane imageContainer = new StackPane();
         imageContainer.getStyleClass().add("item-image-container");
-
-        try {
-            Image img = null;
-            if (item.getImgSrc() != null && !item.getImgSrc().isEmpty()) {
-                String url = item.getImgSrc();
-
-                // 1. Check local file
-                File f = new File(url);
-                if (f.exists()) {
-                    url = f.toURI().toString();
+        imageContainer.setCursor(Cursor.HAND);
+        
+        // Use image cache for faster loading
+        Image loadedImage = ImageCache.getInstance().getImage(item.getImgSrc());
+        
+        if (loadedImage != null) {
+            ImageView iv = new ImageView(loadedImage);
+            iv.setFitWidth(90);
+            iv.setFitHeight(90);
+            iv.setPreserveRatio(true);
+            imageContainer.getChildren().add(iv);
+            
+            // Handle errors
+            loadedImage.errorProperty().addListener((obs, oldV, newV) -> {
+                if (newV) {
+                    Platform.runLater(() -> {
+                        imageContainer.getChildren().clear();
+                        Label placeholder = new Label("📷");
+                        placeholder.getStyleClass().add("placeholder-icon");
+                        imageContainer.getChildren().add(placeholder);
+                    });
                 }
-                // 2. Check resource if not http/file
-                else if (!url.startsWith("http") && !url.startsWith("file:")) {
-                    java.net.URL res = getClass().getResource(url);
-                    if (res != null) {
-                        url = res.toExternalForm();
-                    }
-                }
-
-                // Use standard Image (background loading)
-                img = new Image(url, true);
-            }
-
-            if (img != null && !img.isError()) {
-                ImageView iv = new ImageView(img);
-                iv.setFitWidth(90);
-                iv.setFitHeight(90);
-                iv.setPreserveRatio(true);
-                imageContainer.getChildren().add(iv);
-            } else {
-                throw new Exception("Image invalid");
-            }
-        } catch (Exception e) {
+            });
+        } else {
             Label placeholder = new Label("📷");
             placeholder.getStyleClass().add("placeholder-icon");
             imageContainer.getChildren().add(placeholder);
         }
+        
+        // Add click handler to show details
+        final Image finalImage = loadedImage;
+        imageContainer.setOnMouseClicked(e -> showItemDetails(item, finalImage));
+        
+        // Add hover effect
+        imageContainer.setOnMouseEntered(e -> {
+            imageContainer.setStyle("-fx-background-color: rgba(0,0,0,0.1); -fx-background-radius: 5;");
+        });
+        imageContainer.setOnMouseExited(e -> {
+            imageContainer.setStyle("");
+        });
 
         // Details
         VBox details = new VBox(10);
@@ -223,5 +227,156 @@ public class FriendProfileController {
         modalOverlay.setOnMouseClicked(e -> rootStackPane.getChildren().remove(modalOverlay));
 
         rootStackPane.getChildren().add(modalOverlay);
+    }
+    
+    private void showItemDetails(Item item, Image image) {
+        // Get the scene
+        javafx.scene.Scene scene = itemsContainer.getScene();
+        if (scene == null) return;
+        
+        javafx.scene.Parent root = scene.getRoot();
+        
+        // Get or create a StackPane container for the modal overlay
+        final StackPane finalContainer;
+        
+        if (root instanceof StackPane) {
+            finalContainer = (StackPane) root;
+        } else {
+            // Wrap the root in a StackPane to allow overlay
+            StackPane wrapper = new StackPane();
+            wrapper.getChildren().add(root);
+            scene.setRoot(wrapper);
+            finalContainer = wrapper;
+        }
+        
+        // Create modal overlay - covers entire window
+        StackPane modalOverlay = new StackPane();
+        modalOverlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7);");
+        modalOverlay.setPrefSize(scene.getWidth(), scene.getHeight());
+        modalOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        
+        modalOverlay.setOnMouseClicked(e -> {
+            finalContainer.getChildren().remove(modalOverlay);
+        });
+        
+        // Update size when window resizes
+        scene.widthProperty().addListener((obs, oldV, newV) -> {
+            modalOverlay.setPrefWidth(newV.doubleValue());
+        });
+        scene.heightProperty().addListener((obs, oldV, newV) -> {
+            modalOverlay.setPrefHeight(newV.doubleValue());
+        });
+
+        // Create modal content
+        VBox modalContent = new VBox(20);
+        modalContent.setAlignment(Pos.CENTER);
+        modalContent.setPadding(new Insets(30));
+        modalContent.setMaxWidth(600);
+        modalContent.setStyle("-fx-background-color: white; -fx-background-radius: 15; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 5);");
+
+        // Prevent closing when clicking inside the modal
+        modalContent.setOnMouseClicked(e -> e.consume());
+
+        // Header with close button
+        HBox headerBox = new HBox();
+        headerBox.setAlignment(Pos.CENTER_RIGHT);
+        headerBox.setPadding(new Insets(0, 0, 10, 0));
+        Button closeBtn = new Button("✖");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #999; " +
+                "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;");
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #333; " +
+                "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle(
+                "-fx-background-color: transparent; -fx-text-fill: #999; " +
+                "-fx-font-size: 24px; -fx-cursor: hand; -fx-border-width: 0;"));
+        closeBtn.setOnAction(e -> finalContainer.getChildren().remove(modalOverlay));
+        headerBox.getChildren().add(closeBtn);
+
+        // Large image - exactly 500x350px
+        StackPane imageBox = new StackPane();
+        imageBox.setStyle("-fx-background-color: #f5f5f5; -fx-background-radius: 10;");
+        imageBox.setPrefSize(500, 350);
+        imageBox.setMinSize(500, 350);
+        imageBox.setMaxSize(500, 350);
+        imageBox.setAlignment(Pos.CENTER);
+
+        if (image != null && !image.isError()) {
+            ImageView largeImageView = new ImageView(image);
+            largeImageView.setFitWidth(500);
+            largeImageView.setFitHeight(350);
+            largeImageView.setPreserveRatio(true);
+            largeImageView.setSmooth(true);
+            imageBox.getChildren().add(largeImageView);
+        } else {
+            Label placeholderLabel = new Label("📷");
+            placeholderLabel.setStyle("-fx-font-size: 80px; -fx-text-fill: #ccc;");
+            imageBox.getChildren().add(placeholderLabel);
+        }
+
+        // Product details
+        VBox detailsBox = new VBox(12);
+        detailsBox.setAlignment(Pos.CENTER_LEFT);
+        detailsBox.setPadding(new Insets(15, 0, 0, 0));
+
+        // Product Name - Bold and prominent
+        Label nameLabel = new Label(item.getName());
+        nameLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;");
+        nameLabel.setWrapText(true);
+
+        // Total Price - Clear pricing information
+        Label priceLabel = new Label("Total Price: E£ " + String.format("%,.2f", item.getPrice()));
+        priceLabel.setStyle("-fx-font-size: 18px; -fx-text-fill: #2c3e50; -fx-font-weight: bold;");
+
+        // Funding Progress - Shows funded amount, goal, and percentage
+        double progress = (item.getPrice() > 0) ? Math.min(item.getFunded() / item.getPrice(), 1.0) : 0;
+        int progressPercent = (int) (progress * 100);
+
+        Label fundingLabel = new Label("Funding: E£ " + String.format("%,.2f", item.getFunded()) +
+                " of E£ " + String.format("%,.2f", item.getPrice()) +
+                " (" + progressPercent + "%)");
+        fundingLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #27ae60; -fx-font-weight: bold;");
+
+        // Remaining Amount - How much more is needed
+        double remaining = Math.max(item.getPrice() - item.getFunded(), 0);
+        Label remainingLabel = new Label("Remaining: E£ " + String.format("%,.2f", remaining));
+        remainingLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+
+        // Progress Bar - Visual representation of funding progress
+        ProgressBar detailProgressBar = new ProgressBar(progress);
+        detailProgressBar.setPrefWidth(500);
+        detailProgressBar.setPrefHeight(25);
+        detailProgressBar.setStyle("-fx-accent: #2196F3; -fx-background-radius: 5;");
+
+        // Action buttons
+        HBox buttonBox = new HBox(15);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(20, 0, 0, 0));
+        
+        Button contributeBtn = new Button("Contribute");
+        contributeBtn.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; " +
+                "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;");
+        contributeBtn.setOnMouseEntered(e -> contributeBtn.setStyle(
+                "-fx-background-color: #2980b9; -fx-text-fill: white; " +
+                "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+        contributeBtn.setOnMouseExited(e -> contributeBtn.setStyle(
+                "-fx-background-color: #3498db; -fx-text-fill: white; " +
+                "-fx-font-size: 16px; -fx-padding: 10 20; -fx-background-radius: 5; -fx-cursor: hand;"));
+        contributeBtn.setOnAction(e -> {
+            showContributionModal(item.getName(), item.getId(), item.getFunded(), item.getPrice());
+            finalContainer.getChildren().remove(modalOverlay);
+        });
+        
+        buttonBox.getChildren().add(contributeBtn);
+
+        detailsBox.getChildren().addAll(nameLabel, priceLabel, fundingLabel, remainingLabel, detailProgressBar, buttonBox);
+
+        modalContent.getChildren().addAll(headerBox, imageBox, detailsBox);
+        modalOverlay.getChildren().add(modalContent);
+        StackPane.setAlignment(modalContent, Pos.CENTER);
+
+        // Add modal overlay to root container
+        finalContainer.getChildren().add(modalOverlay);
     }
 }

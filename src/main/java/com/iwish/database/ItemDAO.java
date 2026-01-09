@@ -33,11 +33,13 @@ public class ItemDAO {
                 ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                items.add(new Item(
+                Item item = new Item(
                         rs.getInt("item_id"),
                         rs.getString("item_name"),
                         rs.getDouble("item_price"),
-                        rs.getString("img_src")));
+                        rs.getString("img_src"));
+                item.setDescription(rs.getString("description"));
+                items.add(item);
             }
         } catch (SQLException e) {
             e.printStackTrace();

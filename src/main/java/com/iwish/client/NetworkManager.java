@@ -120,17 +120,38 @@ public class NetworkManager {
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
 
-                            // Reconstruct URL (it may contain colons)
-                            StringBuilder imgSrcBuilder = new StringBuilder();
-                            for (int k = 3; k < itemParts.length; k++) {
-                                imgSrcBuilder.append(itemParts[k]);
-                                if (k < itemParts.length - 1) {
-                                    imgSrcBuilder.append(":");
+                            // Format: id:name:price:url:parts:description
+                            // URL may contain colons, description is last
+                            String imgSrc = "";
+                            String description = "";
+                            
+                            if (itemParts.length >= 5) {
+                                // Has description: id:name:price:url:parts:description
+                                description = itemParts[itemParts.length - 1];
+                                // URL is everything from index 3 to length-2
+                                StringBuilder imgSrcBuilder = new StringBuilder();
+                                for (int k = 3; k < itemParts.length - 1; k++) {
+                                    imgSrcBuilder.append(itemParts[k]);
+                                    if (k < itemParts.length - 2) {
+                                        imgSrcBuilder.append(":");
+                                    }
                                 }
+                                imgSrc = imgSrcBuilder.toString();
+                            } else if (itemParts.length >= 4) {
+                                // No description: id:name:price:url
+                                StringBuilder imgSrcBuilder = new StringBuilder();
+                                for (int k = 3; k < itemParts.length; k++) {
+                                    imgSrcBuilder.append(itemParts[k]);
+                                    if (k < itemParts.length - 1) {
+                                        imgSrcBuilder.append(":");
+                                    }
+                                }
+                                imgSrc = imgSrcBuilder.toString();
                             }
-                            String imgSrc = imgSrcBuilder.toString();
 
-                            items.add(new Item(id, name, price, imgSrc));
+                            Item item = new Item(id, name, price, imgSrc);
+                            item.setDescription(description);
+                            items.add(item);
                         } catch (NumberFormatException e) {
                             System.err.println("Error parsing item: " + itemStr);
                         }
@@ -166,18 +187,35 @@ public class NetworkManager {
                             String name = itemParts[1];
                             double price = Double.parseDouble(itemParts[2]);
 
-                            // Handling for URL and Funded amount
-                            // Format: id:name:price:url:parts:funded
-                            // funded is always the last part if present and length > 4 (assuming normal
-                            // item has 4 parts min usually)
-                            // But wait, getAllItems format was id:name:price:url
-                            // getUserWishlist sends funded at the end.
+                            // Format: id:name:price:url:parts:funded:description
+                            // URL may contain colons, so we need to reconstruct it carefully
+                            // funded is second-to-last, description is last
 
                             double funded = 0.0;
                             String imgSrc = "";
+                            String description = "";
 
-                            if (itemParts.length >= 5) {
-                                // Try to parse the last part as funded amount
+                            if (itemParts.length >= 6) {
+                                // Has description: id:name:price:url:parts:funded:description
+                                try {
+                                    // Description is last part
+                                    description = itemParts[itemParts.length - 1];
+                                    // Funded is second-to-last
+                                    funded = Double.parseDouble(itemParts[itemParts.length - 2]);
+                                    // URL is everything from index 3 to length-3
+                                    StringBuilder sb = new StringBuilder();
+                                    for (int k = 3; k < itemParts.length - 2; k++) {
+                                        sb.append(itemParts[k]);
+                                        if (k < itemParts.length - 3) {
+                                            sb.append(":");
+                                        }
+                                    }
+                                    imgSrc = sb.toString();
+                                } catch (NumberFormatException e) {
+                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 2]);
+                                }
+                            } else if (itemParts.length >= 5) {
+                                // No description: id:name:price:url:parts:funded
                                 try {
                                     funded = Double.parseDouble(itemParts[itemParts.length - 1]);
                                     // URL is everything from index 3 to length-2
@@ -190,22 +228,16 @@ public class NetworkManager {
                                     }
                                     imgSrc = sb.toString();
                                 } catch (NumberFormatException e) {
-                                    // Maybe last part isn't funded? e.g. URL ending in number?
-                                    // Safer protocol would be better, but assuming server sends funded as double.
-                                    // Fallback: treat as URL if parse fails (unlikely for getUserWishlist which
-                                    // expects funded)
-                                    System.err
-                                            .println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
+                                    System.err.println("Error parsing funded amount: " + itemParts[itemParts.length - 1]);
                                 }
                             } else if (itemParts.length >= 4) {
-                                // Just URL, no funded? Or empty URL?
-                                // If length is 4, it is id:name:price:urlPart OR id:name:price:funded?
-                                // Assuming standard format includes URL.
+                                // Just URL, no funded or description
                                 imgSrc = itemParts[3];
                             }
 
                             Item item = new Item(id, name, price, imgSrc);
                             item.setFunded(funded);
+                            item.setDescription(description);
                             items.add(item);
                         } catch (NumberFormatException e) {
                             System.err.println("Error parsing item: " + itemStr);

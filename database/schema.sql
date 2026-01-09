@@ -28,7 +28,8 @@ CREATE TABLE WishList (
     item_name VARCHAR(200) NOT NULL,
     item_price DECIMAL(10,2) NOT NULL,
     description VARCHAR(500),
-    img_src VARCHAR(500)
+    img_src VARCHAR(500),
+    is_claimed SMALLINT DEFAULT 0
 );
 
 -- UserWishes Table (Personal Wishlist Selection)
